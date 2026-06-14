@@ -1,0 +1,123 @@
+[gd_scene load_steps=5 format=3]
+
+[ext_resource type="Script" path="res://scripts/flow/topic_select.gd" id="1_topic"]
+
+[sub_resource type="StyleBoxFlat" id="style_btn_normal"]
+bg_color = Color(0.13, 0.1, 0.26, 0.9)
+border_width_left = 1
+border_width_top = 1
+border_width_right = 1
+border_width_bottom = 1
+border_color = Color(0.55, 0.42, 0.9, 0.55)
+corner_radius_top_left = 4
+corner_radius_top_right = 4
+corner_radius_bottom_left = 4
+corner_radius_bottom_right = 4
+content_margin_left = 14
+content_margin_top = 12
+content_margin_right = 14
+content_margin_bottom = 12
+
+[sub_resource type="StyleBoxFlat" id="style_btn_hover"]
+bg_color = Color(0.28, 0.2, 0.5, 0.95)
+border_width_left = 1
+border_width_top = 1
+border_width_right = 1
+border_width_bottom = 1
+border_color = Color(0.8, 0.65, 1, 0.95)
+corner_radius_top_left = 4
+corner_radius_top_right = 4
+corner_radius_bottom_left = 4
+corner_radius_bottom_right = 4
+content_margin_left = 14
+content_margin_top = 12
+content_margin_right = 14
+content_margin_bottom = 12
+
+[sub_resource type="Theme" id="theme_dream"]
+Button/colors/font_color = Color(0.94, 0.9, 1, 1)
+Button/font_sizes/font_size = 22
+Button/styles/hover = SubResource("style_btn_hover")
+Button/styles/normal = SubResource("style_btn_normal")
+Button/styles/pressed = SubResource("style_btn_hover")
+
+[node name="TopicSelect" type="Control"]
+anchor_right = 1.0
+anchor_bottom = 1.0
+theme = SubResource("theme_dream")
+script = ExtResource("1_topic")
+
+[node name="Background" type="ColorRect" parent="."]
+offset_right = 1280.0
+offset_bottom = 720.0
+color = Color(0.04, 0.025, 0.1, 1)
+mouse_filter = 2
+
+[node name="DreamMotes" type="CPUParticles2D" parent="."]
+position = Vector2(640, 80)
+amount = 60
+lifetime = 12.0
+preprocess = 6.0
+emission_shape = 3
+emission_rect_extents = Vector2(640, 40)
+direction = Vector2(0, 1)
+spread = 25.0
+gravity = Vector2(0, 4)
+initial_velocity_min = 2.0
+initial_velocity_max = 8.0
+scale_amount_min = 1.5
+scale_amount_max = 4.0
+color = Color(0.8, 0.85, 1, 0.4)
+
+[node name="Header" type="VBoxContainer" parent="."]
+anchor_left = 0.5
+anchor_right = 0.5
+offset_left = -500.0
+offset_top = 80.0
+offset_right = 500.0
+offset_bottom = 200.0
+theme_override_constants/separation = 8
+
+[node name="GradeBadge" type="Label" parent="Header"]
+horizontal_alignment = 1
+text = "[학년]"
+modulate = Color(0.78, 0.92, 1, 0.85)
+theme_override_font_sizes/font_size = 22
+
+[node name="SubjectBadge" type="Label" parent="Header"]
+horizontal_alignment = 1
+text = "[과목]"
+modulate = Color(1, 0.88, 0.6, 0.95)
+theme_override_font_sizes/font_size = 30
+
+[node name="Title" type="Label" parent="Header"]
+horizontal_alignment = 1
+text = "단원을 선택하세요"
+modulate = Color(0.92, 0.95, 1, 0.95)
+theme_override_font_sizes/font_size = 28
+
+[node name="ScrollContainer" type="ScrollContainer" parent="."]
+anchor_left = 0.5
+anchor_top = 0.0
+anchor_right = 0.5
+anchor_bottom = 1.0
+offset_left = -460.0
+offset_top = 240.0
+offset_right = 460.0
+offset_bottom = -100.0
+
+[node name="TopicGrid" type="GridContainer" parent="ScrollContainer"]
+columns = 2
+theme_override_constants/h_separation = 14
+theme_override_constants/v_separation = 12
+
+[node name="BackButton" type="Button" parent="."]
+anchor_left = 0.5
+anchor_top = 1.0
+anchor_right = 0.5
+anchor_bottom = 1.0
+offset_left = -90.0
+offset_top = -70.0
+offset_right = 90.0
+offset_bottom = -30.0
+text = "← 과목으로"

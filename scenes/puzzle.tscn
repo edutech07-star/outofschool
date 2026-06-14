@@ -1,0 +1,360 @@
+[gd_scene load_steps=10 format=3]
+
+[ext_resource type="Script" path="res://scripts/flow/puzzle.gd" id="1_puzzle"]
+
+[sub_resource type="Gradient" id="grad_vignette"]
+offsets = PackedFloat32Array(0, 0.5, 1)
+colors = PackedColorArray(0, 0, 0, 0, 0.05, 0.02, 0.12, 0.3, 0, 0, 0, 0.92)
+
+[sub_resource type="GradientTexture2D" id="tex_vignette"]
+gradient = SubResource("grad_vignette")
+width = 1280
+height = 720
+fill = 1
+fill_from = Vector2(0.5, 0.5)
+fill_to = Vector2(1, 0.5)
+
+[sub_resource type="Gradient" id="grad_board_light"]
+offsets = PackedFloat32Array(0, 0.55, 1)
+colors = PackedColorArray(0.55, 0.85, 0.95, 0.85, 0.3, 0.55, 0.85, 0.42, 0, 0, 0, 0)
+
+[sub_resource type="GradientTexture2D" id="tex_board_light"]
+gradient = SubResource("grad_board_light")
+width = 800
+height = 400
+fill = 1
+fill_from = Vector2(0.5, 0.5)
+fill_to = Vector2(1, 0.5)
+
+[sub_resource type="StyleBoxFlat" id="style_panel"]
+bg_color = Color(0.07, 0.05, 0.18, 0.88)
+border_width_left = 2
+border_width_top = 2
+border_width_right = 2
+border_width_bottom = 2
+border_color = Color(0.55, 0.42, 0.95, 0.7)
+corner_radius_top_left = 10
+corner_radius_top_right = 10
+corner_radius_bottom_left = 10
+corner_radius_bottom_right = 10
+shadow_color = Color(0.5, 0.35, 1, 0.3)
+shadow_size = 16
+
+[sub_resource type="StyleBoxFlat" id="style_btn_normal"]
+bg_color = Color(0.13, 0.1, 0.26, 0.85)
+border_width_left = 1
+border_width_top = 1
+border_width_right = 1
+border_width_bottom = 1
+border_color = Color(0.55, 0.42, 0.9, 0.55)
+corner_radius_top_left = 4
+corner_radius_top_right = 4
+corner_radius_bottom_left = 4
+corner_radius_bottom_right = 4
+content_margin_left = 14
+content_margin_top = 8
+content_margin_right = 14
+content_margin_bottom = 8
+
+[sub_resource type="StyleBoxFlat" id="style_btn_hover"]
+bg_color = Color(0.28, 0.2, 0.5, 0.95)
+border_width_left = 1
+border_width_top = 1
+border_width_right = 1
+border_width_bottom = 1
+border_color = Color(0.8, 0.65, 1, 0.95)
+corner_radius_top_left = 4
+corner_radius_top_right = 4
+corner_radius_bottom_left = 4
+corner_radius_bottom_right = 4
+content_margin_left = 14
+content_margin_top = 8
+content_margin_right = 14
+content_margin_bottom = 8
+
+[sub_resource type="Theme" id="theme_dream"]
+Button/colors/font_color = Color(0.94, 0.9, 1, 1)
+Button/font_sizes/font_size = 22
+Button/styles/hover = SubResource("style_btn_hover")
+Button/styles/normal = SubResource("style_btn_normal")
+Button/styles/pressed = SubResource("style_btn_hover")
+
+[node name="Puzzle" type="Control"]
+anchor_right = 1.0
+anchor_bottom = 1.0
+theme = SubResource("theme_dream")
+script = ExtResource("1_puzzle")
+
+[node name="CanvasModulate" type="CanvasModulate" parent="."]
+color = Color(0.52, 0.44, 0.72, 1)
+
+[node name="Background" type="ColorRect" parent="."]
+offset_right = 1280.0
+offset_bottom = 720.0
+color = Color(0.035, 0.025, 0.1, 1)
+mouse_filter = 2
+
+[node name="FloorShade" type="ColorRect" parent="."]
+offset_top = 380.0
+offset_right = 1280.0
+offset_bottom = 720.0
+color = Color(0.07, 0.045, 0.14, 1)
+mouse_filter = 2
+
+[node name="FloorLine1" type="ColorRect" parent="."]
+offset_top = 540.0
+offset_right = 1280.0
+offset_bottom = 542.0
+color = Color(0.15, 0.1, 0.25, 1)
+mouse_filter = 2
+
+[node name="ChalkboardFrame" type="ColorRect" parent="."]
+offset_left = 140.0
+offset_top = 20.0
+offset_right = 1140.0
+offset_bottom = 240.0
+color = Color(0.28, 0.18, 0.13, 1)
+mouse_filter = 2
+
+[node name="Chalkboard" type="ColorRect" parent="."]
+offset_left = 160.0
+offset_top = 40.0
+offset_right = 1120.0
+offset_bottom = 220.0
+color = Color(0.05, 0.16, 0.15, 1)
+mouse_filter = 2
+
+[node name="ChalkSmudge1" type="ColorRect" parent="."]
+offset_left = 200.0
+offset_top = 75.0
+offset_right = 460.0
+offset_bottom = 78.0
+color = Color(0.7, 0.85, 0.85, 0.18)
+mouse_filter = 2
+
+[node name="ChalkSmudge2" type="ColorRect" parent="."]
+offset_left = 700.0
+offset_top = 165.0
+offset_right = 1080.0
+offset_bottom = 168.0
+color = Color(0.7, 0.85, 0.85, 0.12)
+mouse_filter = 2
+
+[node name="ChalkSmudge3" type="ColorRect" parent="."]
+offset_left = 220.0
+offset_top = 192.0
+offset_right = 360.0
+offset_bottom = 194.0
+color = Color(0.7, 0.85, 0.85, 0.15)
+mouse_filter = 2
+
+[node name="ChalkText" type="Label" parent="."]
+offset_left = 160.0
+offset_top = 85.0
+offset_right = 1120.0
+offset_bottom = 165.0
+text = "꿈 속의 교실"
+horizontal_alignment = 1
+vertical_alignment = 1
+modulate = Color(0.78, 0.95, 0.95, 0.92)
+theme_override_font_sizes/font_size = 40
+
+[node name="ChalkSubText" type="Label" parent="."]
+offset_left = 160.0
+offset_top = 160.0
+offset_right = 1120.0
+offset_bottom = 205.0
+text = "정답을 맞히면 열쇠 조각이 떨어진다..."
+horizontal_alignment = 1
+vertical_alignment = 1
+modulate = Color(0.7, 0.88, 0.95, 0.55)
+theme_override_font_sizes/font_size = 18
+
+[node name="BoardLight" type="PointLight2D" parent="."]
+position = Vector2(640, 130)
+texture = SubResource("tex_board_light")
+energy = 0.95
+color = Color(0.45, 0.72, 0.95, 1)
+blend_mode = 1
+
+[node name="DesksNode" type="Node2D" parent="."]
+
+[node name="Desk1Body" type="Polygon2D" parent="DesksNode"]
+position = Vector2(220, 478)
+color = Color(0.16, 0.11, 0.28, 0.72)
+polygon = PackedVector2Array(-35, -22, 35, -22, 40, 18, -40, 18)
+
+[node name="Desk1Top" type="Polygon2D" parent="DesksNode"]
+position = Vector2(220, 478)
+color = Color(0.5, 0.62, 0.85, 0.7)
+polygon = PackedVector2Array(-35, -22, 35, -22, 35, -16, -35, -16)
+
+[node name="Desk1Leg1" type="Polygon2D" parent="DesksNode"]
+position = Vector2(220, 478)
+color = Color(0.1, 0.07, 0.2, 0.7)
+polygon = PackedVector2Array(-32, 18, -28, 18, -28, 38, -32, 38)
+
+[node name="Desk1Leg2" type="Polygon2D" parent="DesksNode"]
+position = Vector2(220, 478)
+color = Color(0.1, 0.07, 0.2, 0.7)
+polygon = PackedVector2Array(28, 18, 32, 18, 32, 38, 28, 38)
+
+[node name="Desk2Body" type="Polygon2D" parent="DesksNode"]
+position = Vector2(360, 506)
+color = Color(0.14, 0.1, 0.26, 0.68)
+polygon = PackedVector2Array(-35, -22, 35, -22, 40, 18, -40, 18)
+
+[node name="Desk2Top" type="Polygon2D" parent="DesksNode"]
+position = Vector2(360, 506)
+color = Color(0.45, 0.58, 0.8, 0.65)
+polygon = PackedVector2Array(-35, -22, 35, -22, 35, -16, -35, -16)
+
+[node name="Desk2Leg1" type="Polygon2D" parent="DesksNode"]
+position = Vector2(360, 506)
+color = Color(0.1, 0.07, 0.2, 0.65)
+polygon = PackedVector2Array(-32, 18, -28, 18, -28, 38, -32, 38)
+
+[node name="Desk2Leg2" type="Polygon2D" parent="DesksNode"]
+position = Vector2(360, 506)
+color = Color(0.1, 0.07, 0.2, 0.65)
+polygon = PackedVector2Array(28, 18, 32, 18, 32, 38, 28, 38)
+
+[node name="Desk3Body" type="Polygon2D" parent="DesksNode"]
+position = Vector2(920, 478)
+color = Color(0.16, 0.11, 0.28, 0.72)
+polygon = PackedVector2Array(-35, -22, 35, -22, 40, 18, -40, 18)
+
+[node name="Desk3Top" type="Polygon2D" parent="DesksNode"]
+position = Vector2(920, 478)
+color = Color(0.5, 0.62, 0.85, 0.7)
+polygon = PackedVector2Array(-35, -22, 35, -22, 35, -16, -35, -16)
+
+[node name="Desk3Leg1" type="Polygon2D" parent="DesksNode"]
+position = Vector2(920, 478)
+color = Color(0.1, 0.07, 0.2, 0.7)
+polygon = PackedVector2Array(-32, 18, -28, 18, -28, 38, -32, 38)
+
+[node name="Desk3Leg2" type="Polygon2D" parent="DesksNode"]
+position = Vector2(920, 478)
+color = Color(0.1, 0.07, 0.2, 0.7)
+polygon = PackedVector2Array(28, 18, 32, 18, 32, 38, 28, 38)
+
+[node name="Desk4Body" type="Polygon2D" parent="DesksNode"]
+position = Vector2(1060, 506)
+color = Color(0.14, 0.1, 0.26, 0.68)
+polygon = PackedVector2Array(-35, -22, 35, -22, 40, 18, -40, 18)
+
+[node name="Desk4Top" type="Polygon2D" parent="DesksNode"]
+position = Vector2(1060, 506)
+color = Color(0.45, 0.58, 0.8, 0.65)
+polygon = PackedVector2Array(-35, -22, 35, -22, 35, -16, -35, -16)
+
+[node name="Desk5Body" type="Polygon2D" parent="DesksNode"]
+position = Vector2(160, 622)
+color = Color(0.12, 0.085, 0.22, 0.55)
+polygon = PackedVector2Array(-30, -19, 30, -19, 34, 16, -34, 16)
+
+[node name="Desk5Top" type="Polygon2D" parent="DesksNode"]
+position = Vector2(160, 622)
+color = Color(0.4, 0.52, 0.75, 0.55)
+polygon = PackedVector2Array(-30, -19, 30, -19, 30, -14, -30, -14)
+
+[node name="Desk6Body" type="Polygon2D" parent="DesksNode"]
+position = Vector2(1120, 622)
+color = Color(0.12, 0.085, 0.22, 0.55)
+polygon = PackedVector2Array(-30, -19, 30, -19, 34, 16, -34, 16)
+
+[node name="Desk6Top" type="Polygon2D" parent="DesksNode"]
+position = Vector2(1120, 622)
+color = Color(0.4, 0.52, 0.75, 0.55)
+polygon = PackedVector2Array(-30, -19, 30, -19, 30, -14, -30, -14)
+
+[node name="DreamMotes" type="CPUParticles2D" parent="."]
+position = Vector2(640, 60)
+amount = 120
+lifetime = 14.0
+preprocess = 7.0
+emission_shape = 3
+emission_rect_extents = Vector2(640, 80)
+direction = Vector2(0, 1)
+spread = 25.0
+gravity = Vector2(0, 4)
+initial_velocity_min = 2.0
+initial_velocity_max = 8.0
+scale_amount_min = 1.5
+scale_amount_max = 4.0
+color = Color(0.85, 0.92, 1, 0.5)
+angular_velocity_min = -25.0
+angular_velocity_max = 25.0
+
+[node name="DreamWisps" type="CPUParticles2D" parent="."]
+position = Vector2(640, 380)
+amount = 28
+lifetime = 9.0
+preprocess = 4.0
+emission_shape = 1
+emission_sphere_radius = 600.0
+direction = Vector2(-0.3, -1)
+spread = 60.0
+gravity = Vector2(0, -8)
+initial_velocity_min = 6.0
+initial_velocity_max = 18.0
+scale_amount_min = 3.0
+scale_amount_max = 8.0
+color = Color(0.55, 0.75, 1, 0.18)
+
+[node name="QuestionPanel" type="Panel" parent="."]
+offset_left = 220.0
+offset_top = 260.0
+offset_right = 1060.0
+offset_bottom = 670.0
+theme_override_styles/panel = SubResource("style_panel")
+
+[node name="VBox" type="VBoxContainer" parent="."]
+offset_left = 250.0
+offset_top = 290.0
+offset_right = 1030.0
+offset_bottom = 640.0
+theme_override_constants/separation = 14
+
+[node name="QuestionLabel" type="Label" parent="VBox"]
+autowrap_mode = 2
+horizontal_alignment = 1
+custom_minimum_size = Vector2(0, 110)
+theme_override_colors/font_color = Color(0.95, 0.95, 1, 1)
+theme_override_font_sizes/font_size = 28
+
+[node name="ChoicesBox" type="VBoxContainer" parent="VBox"]
+theme_override_constants/separation = 8
+
+[node name="HintButton" type="Button" parent="VBox"]
+text = "힌트 보기"
+
+[node name="HintLabel" type="Label" parent="VBox"]
+autowrap_mode = 2
+theme_override_colors/font_color = Color(0.7, 0.92, 1, 0.85)
+theme_override_font_sizes/font_size = 18
+
+[node name="StatusLabel" type="Label" parent="VBox"]
+autowrap_mode = 2
+horizontal_alignment = 1
+theme_override_colors/font_color = Color(0.85, 0.95, 1, 1)
+theme_override_font_sizes/font_size = 22
+
+[node name="Vignette" type="TextureRect" parent="."]
+offset_right = 1280.0
+offset_bottom = 720.0
+texture = SubResource("tex_vignette")
+mouse_filter = 2
+
+[node name="HUD" type="CanvasLayer" parent="."]
+
+[node name="FragmentCounter" type="Label" parent="HUD"]
+offset_left = 920.0
+offset_top = 24.0
+offset_right = 1256.0
+offset_bottom = 60.0
+text = "✦ 열쇠 조각 0 / 10"
+horizontal_alignment = 2
+modulate = Color(1, 0.85, 0.55, 0.95)
+theme_override_font_sizes/font_size = 22

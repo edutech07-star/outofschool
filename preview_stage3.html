@@ -1,0 +1,2915 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8" />
+<title>Escape Room School — 2D Pixel</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=VT323&family=Press+Start+2P&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg:#0a0a18; --fg:#e8e8ee; --accent:#7af0a0; --dream:#9b8aff;
+    --warn:#f06070; --muted:#6a6a78; --border:#2a2a36;
+  }
+  *,*:before,*:after { box-sizing:border-box; image-rendering:pixelated; image-rendering:crisp-edges; }
+  html, body { margin:0; padding:0; background:#000; color:var(--fg);
+    font-family:'VT323', monospace; font-size:18px; overflow:hidden; height:100%; }
+  h1,h2,h3 { font-family:'Press Start 2P', monospace; letter-spacing:1px; }
+  h1 { font-size:16px !important; line-height:1.4; margin:0 0 16px; }
+  h2 { font-size:12px !important; line-height:1.4; margin:18px 0 10px; color:var(--accent); }
+  h3 { font-size:11px !important; margin:0 0 6px; color:var(--accent); }
+  input, button, .panel, .difficulty-card, #bottom-map, #gamepad-status {
+    border-radius: 0 !important;
+  }
+  #c { display:block; width:100vw; height:100vh; image-rendering:pixelated; background:#000; }
+
+  /* 몽환적 로그인 배경 */
+  #photo-bg {
+    position:fixed; inset:0; z-index:40; overflow:hidden;
+    background:
+      radial-gradient(ellipse at 30% 30%, rgba(120,80,180,0.18) 0%, transparent 60%),
+      radial-gradient(ellipse at 70% 70%, rgba(80,160,200,0.15) 0%, transparent 55%),
+      radial-gradient(ellipse at 50% 60%, rgba(140,100,80,0.20) 0%, rgba(10,8,18,0.96) 78%),
+      linear-gradient(180deg, #2a2240 0%, #1a1828 45%, #0a0814 100%);
+    animation: dreamShift 12s infinite ease-in-out;
+  }
+  @keyframes dreamShift {
+    0%,100% { filter: hue-rotate(0deg) brightness(1); }
+    50% { filter: hue-rotate(20deg) brightness(1.1); }
+  }
+  #photo-bg::before {
+    content:""; position:absolute; inset:0;
+    background-image:
+      repeating-linear-gradient(0deg, rgba(255,255,255,0.03) 0 1px, transparent 1px 3px),
+      radial-gradient(circle at 20% 10%, rgba(200,160,255,0.18), transparent 45%),
+      radial-gradient(circle at 80% 80%, rgba(140,220,255,0.12), transparent 50%);
+    mix-blend-mode:overlay; pointer-events:none; animation:flicker 4s infinite;
+  }
+  #photo-bg::after {
+    content:""; position:absolute; inset:0; pointer-events:none;
+    background: radial-gradient(ellipse at 50% 50%, transparent 45%, rgba(0,0,0,0.65) 100%);
+  }
+  @keyframes flicker { 0%,100%{opacity:1} 47%{opacity:0.85} 50%{opacity:0.78} 53%{opacity:0.92} }
+
+  /* 떠다니는 빛 파티클 */
+  .dream-orb {
+    position:absolute; border-radius:50%; pointer-events:none;
+    background: radial-gradient(circle, rgba(200,180,255,0.9) 0%, rgba(120,100,200,0.4) 40%, transparent 70%);
+    mix-blend-mode:screen;
+  }
+  @keyframes float1 {
+    0%   { transform: translate(0, 0) scale(1); opacity: 0; }
+    20%  { opacity: 1; }
+    50%  { transform: translate(40px, -80px) scale(1.3); opacity: 0.9; }
+    80%  { opacity: 0.6; }
+    100% { transform: translate(-20px, -200px) scale(0.6); opacity: 0; }
+  }
+  @keyframes float2 {
+    0%   { transform: translate(0, 0) scale(0.8); opacity: 0; }
+    25%  { opacity: 0.8; }
+    50%  { transform: translate(-60px, -120px) scale(1.1); opacity: 1; }
+    75%  { opacity: 0.5; }
+    100% { transform: translate(30px, -240px) scale(0.5); opacity: 0; }
+  }
+  @keyframes float3 {
+    0%   { transform: translate(0, 0) scale(1.2); opacity: 0; }
+    30%  { opacity: 1; }
+    60%  { transform: translate(80px, -100px) scale(0.9); opacity: 0.7; }
+    100% { transform: translate(-40px, -260px) scale(0.4); opacity: 0; }
+  }
+
+  .photo-school {
+    position:absolute; left:50%; top:30%; transform:translate(-50%,-50%);
+    width:70vmin; max-width:800px; height:auto; opacity:0.55; color:#c8b0e8;
+    filter:blur(0.4px) drop-shadow(0 0 12px rgba(180,140,240,0.4));
+    pointer-events:none;
+    animation: schoolBreathe 8s infinite ease-in-out;
+  }
+  @keyframes schoolBreathe {
+    0%,100% { transform: translate(-50%,-50%) scale(1); opacity: 0.55; }
+    50% { transform: translate(-50%,-52%) scale(1.02); opacity: 0.75; }
+  }
+  .photo-title {
+    position:absolute; left:50%; top:9%; transform:translateX(-50%);
+    color:#e8d8ff; font-size:22px; letter-spacing:10px;
+    font-family:'Press Start 2P', monospace;
+    text-shadow:
+      0 0 10px rgba(180,140,240,0.9),
+      0 0 20px rgba(120,90,200,0.6),
+      0 0 30px rgba(80,160,220,0.4);
+    animation: titleGlow 4s infinite ease-in-out;
+  }
+  @keyframes titleGlow {
+    0%,100% { text-shadow:
+      0 0 10px rgba(180,140,240,0.9),
+      0 0 20px rgba(120,90,200,0.6),
+      0 0 30px rgba(80,160,220,0.4); }
+    50% { text-shadow:
+      0 0 14px rgba(220,180,255,1),
+      0 0 28px rgba(160,120,240,0.8),
+      0 0 42px rgba(100,180,240,0.5); }
+  }
+  .photo-date { position:absolute; right:28px; bottom:22px; color:#c8b0e8;
+    font-size:14px; opacity:0.6; letter-spacing:3px; font-style:italic;
+    text-shadow: 0 0 6px rgba(180,140,240,0.5); }
+  .photo-tagline {
+    position: absolute; left: 50%; top: 17%; transform: translateX(-50%);
+    color: #b8a0d8; font-size: 14px; letter-spacing: 4px; opacity: 0.7;
+    font-family: 'VT323', monospace;
+    text-shadow: 0 0 8px rgba(180,140,240,0.6);
+  }
+
+  .overlay {
+    position:fixed; inset:0; display:flex; align-items:center; justify-content:center;
+    z-index:50; padding:24px; background:rgba(10,10,18,0.85);
+  }
+  .overlay.transparent { background:transparent; }
+  .panel {
+    background:rgba(18,18,26,0.94); border:3px solid var(--border);
+    padding:24px; max-width:720px; width:100%; max-height:90vh; overflow:auto;
+    box-shadow:8px 8px 0 #000, 0 0 40px rgba(122,240,160,0.06);
+  }
+  .panel.login {
+    background:rgba(28,20,42,0.88); border-color:#6a4a96; color:#e8d8ff;
+    box-shadow:
+      8px 8px 0 #000,
+      0 0 60px rgba(160,120,240,0.35),
+      inset 0 0 30px rgba(120,90,200,0.15);
+    max-width:460px;
+    backdrop-filter: blur(2px);
+    animation: panelGlow 5s infinite ease-in-out;
+  }
+  @keyframes panelGlow {
+    0%,100% { box-shadow: 8px 8px 0 #000, 0 0 60px rgba(160,120,240,0.35), inset 0 0 30px rgba(120,90,200,0.15); }
+    50%     { box-shadow: 8px 8px 0 #000, 0 0 90px rgba(180,140,255,0.55), inset 0 0 40px rgba(140,100,220,0.25); }
+  }
+  .panel.login h1 { color:#f0e0ff; text-shadow: 0 0 12px rgba(200,160,255,0.7); }
+  .panel.login label { color:#c8b0e8; }
+  .panel.login input {
+    background:rgba(40,28,60,0.78); border-color:#6a4a96; color:#f0e0ff;
+    box-shadow: inset 0 0 8px rgba(120,90,200,0.2);
+  }
+  .panel.login input:focus { border-color:#c8a0ff; box-shadow: 0 0 12px rgba(200,160,255,0.6); }
+  .panel.login button {
+    background:rgba(60,40,90,0.78); border-color:#8a6ac6; color:#f0e0ff;
+    text-shadow: 0 0 6px rgba(180,140,240,0.5);
+  }
+  .panel.login button.primary {
+    background:#a88adc; color:#1a1228; border-color:#d4b8ff;
+    box-shadow: 0 0 16px rgba(180,140,255,0.6), 4px 4px 0 #000;
+  }
+  .panel.login button.primary:hover { background:#c8a8ff; box-shadow: 0 0 24px rgba(220,180,255,0.9), 4px 4px 0 #000; }
+  .grade-grid { display:grid; grid-template-columns:repeat(3, 1fr); gap:6px; margin:4px 0; }
+  .grade-grid button { width:100%; margin:0; padding:10px 0; text-align:center; }
+  .panel.login .grade-grid button.sel {
+    background:#a88adc; color:#1a1228; border-color:#d4b8ff;
+    box-shadow: 0 0 14px rgba(180,140,255,0.7), 2px 2px 0 #000;
+  }
+  .auth-msg { color:var(--warn); font-size:14px; min-height:1em; margin:8px 0 0;
+    text-shadow:0 0 6px rgba(240,96,112,0.4); }
+  .auth-switch { font-size:14px; color:#a89ac8; margin:10px 0 0; }
+  .panel.login button.linkbtn {
+    background:transparent; border:none; box-shadow:none; padding:0 4px;
+    color:#d4b8ff; text-decoration:underline; font-size:15px;
+    text-shadow:0 0 8px rgba(200,160,255,0.5);
+  }
+  .panel.login button.linkbtn:hover { background:transparent; color:#f0e0ff; }
+
+  label { display:block; margin:10px 0 4px; font-size:14px; color:var(--muted); }
+  input { width:100%; padding:8px 10px; background:#15151c; border:2px solid var(--border);
+    color:var(--fg); font-family:'VT323', monospace; font-size:18px; }
+  input:focus { border-color:var(--accent); outline:none; }
+  button {
+    padding:8px 16px; margin:4px 4px 4px 0; background:#15151c;
+    border:2px solid var(--border); border-bottom-width:4px; border-right-width:4px;
+    color:var(--fg); font-family:'VT323', monospace; font-size:18px; cursor:pointer;
+  }
+  button:hover { background:#1f1f28; border-color:var(--accent); }
+  button:active { border-bottom-width:2px; border-right-width:2px; transform:translate(2px,2px); }
+  button.primary { background:var(--accent); color:#0a0a10; border-color:#5dd886; font-weight:bold; }
+  button.primary:hover { background:#5dd886; }
+  .difficulty-card {
+    border:2px solid var(--border); padding:14px; margin:8px 0; cursor:pointer; background:#15151c;
+  }
+  .difficulty-card.selected { border-color:var(--accent); background:#1a2a1f; }
+  .difficulty-card ul { margin:4px 0; padding-left:20px; font-size:14px; color:var(--muted); }
+  .lock-badge { display:inline-block; padding:2px 8px; background:var(--warn); color:#fff;
+    font-size:11px; margin-left:8px; font-family:'Press Start 2P', monospace; }
+  .keyboard-hint { font-size:14px; color:var(--muted); margin-top:8px; }
+
+  /* HUD */
+  #hud { position:fixed; top:0; left:0; right:0; padding:12px 16px;
+    color:var(--fg); font-size:16px; pointer-events:none; z-index:5;
+    text-shadow:2px 2px 0 #000; }
+  #hud .row { display:flex; justify-content:space-between; }
+  #hud .title { font-family:'Press Start 2P', monospace; font-size:11px; }
+  #bottom-map {
+    position:fixed; left:50%; bottom:16px; transform:translateX(-50%);
+    width:360px; height:160px; background:rgba(8,8,12,0.85);
+    border:2px solid var(--border); border-bottom-width:4px; border-right-width:4px;
+    padding:6px; z-index:5; pointer-events:none; color:var(--muted); font-size:12px;
+  }
+  #bottom-map .label { display:flex; justify-content:space-between; margin-bottom:4px; font-size:12px; }
+  #bottom-map .canvas { position:relative; width:100%; height:calc(100% - 18px); background:#000;
+    border:1px solid #1a1a22; overflow:hidden; }
+  #bottom-map canvas { display:block; image-rendering:pixelated; }
+  #gamepad-status { position:fixed; left:16px; bottom:16px; padding:4px 8px;
+    background:rgba(8,8,12,0.85); border:2px solid var(--border);
+    font-size:12px; color:var(--muted); z-index:5; pointer-events:none; }
+  #gamepad-status.on { color:var(--accent); border-color:var(--accent); }
+  #quit-btn {
+    position:fixed; right:16px; bottom:16px; z-index:6; cursor:pointer;
+    background:rgba(8,8,12,0.85); border:2px solid var(--border);
+    border-bottom-width:4px; border-right-width:4px;
+    color:var(--muted); font-family:'VT323', monospace; font-size:16px; padding:6px 14px;
+  }
+  #quit-btn:hover { color:var(--warn); border-color:var(--warn); }
+  #interact-hint { position:fixed; left:50%; top:60%; transform:translateX(-50%);
+    color:var(--accent); font-size:16px; pointer-events:none; z-index:4;
+    text-shadow:2px 2px 0 #000; display:none;
+    font-family:'VT323', monospace;
+    background:rgba(0,0,0,0.7); padding:6px 14px; border:2px solid var(--accent); }
+  #glitch-overlay { position:fixed; inset:0; pointer-events:none; z-index:3;
+    background:transparent; mix-blend-mode:screen; }
+  #vignette { position:fixed; inset:0; pointer-events:none; z-index:2;
+    background:radial-gradient(ellipse at center, transparent 50%, rgba(0,0,0,0.55) 100%); }
+
+  /* 토스트 알림 */
+  #toast {
+    position:fixed; left:50%; top:80px; transform:translateX(-50%);
+    background:rgba(8,8,12,0.94); border:2px solid var(--accent);
+    color:var(--accent); padding:12px 24px; z-index:6;
+    font-family:'VT323', monospace; font-size:20px;
+    box-shadow:4px 4px 0 #000; pointer-events:none;
+    display:none; text-align:center; white-space:pre-line; max-width:80vw;
+    line-height:1.4;
+  }
+  #toast.warn { border-color:var(--warn); color:var(--warn); }
+
+  /* 열쇠 조각 인벤토리 */
+  #key-inv {
+    position:fixed; right:16px; top:80px;
+    background:rgba(8,8,12,0.85); border:2px solid var(--accent);
+    border-bottom-width:4px; border-right-width:4px;
+    padding:8px 12px; z-index:5; pointer-events:none;
+    font-family:'VT323', monospace; font-size:16px; color:var(--accent);
+    display:none;
+  }
+  #key-inv .title { font-family:'Press Start 2P', monospace; font-size:9px; color:var(--muted); margin-bottom:4px; }
+  #key-inv .frags { display:flex; flex-wrap:wrap; gap:4px; max-width:200px; }
+  #key-inv .frag {
+    width:18px; height:18px; background:#333; border:1px solid #555;
+    display:flex; align-items:center; justify-content:center; font-size:14px;
+  }
+  #key-inv .frag.got { background:#5a4020; border-color:#ffaa44; color:#ffe080; }
+
+  .question-card { background:#15151c; border:2px solid var(--border); padding:20px; }
+  .choices button { display:block; width:100%; text-align:left; margin:6px 0; }
+  .hint-text { color:var(--accent); font-size:15px; margin-top:8px; }
+  .status { font-size:15px; color:var(--muted); margin-top:12px; min-height:1em; }
+</style>
+</head>
+<body>
+
+<canvas id="c"></canvas>
+<div id="vignette"></div>
+<div id="interact-hint">[E] 조사하기</div>
+<div id="glitch-overlay"></div>
+
+<div id="photo-bg" style="display:none">
+  <div class="photo-title">追憶 · 학 교</div>
+  <div class="photo-tagline">잊혀진 기억의 학교에 어서오세요</div>
+  <!-- 떠다니는 빛 파티클 -->
+  <div class="dream-orb" style="left:8%; top:78%; width:14px; height:14px; animation: float1 9s infinite ease-out;"></div>
+  <div class="dream-orb" style="left:18%; top:88%; width:8px; height:8px; animation: float2 11s infinite ease-out 1.5s;"></div>
+  <div class="dream-orb" style="left:32%; top:82%; width:12px; height:12px; animation: float3 13s infinite ease-out 3s;"></div>
+  <div class="dream-orb" style="left:48%; top:92%; width:10px; height:10px; animation: float1 10s infinite ease-out 4.5s;"></div>
+  <div class="dream-orb" style="left:62%; top:80%; width:16px; height:16px; animation: float2 14s infinite ease-out 2s;"></div>
+  <div class="dream-orb" style="left:74%; top:88%; width:7px; height:7px; animation: float3 12s infinite ease-out 5.5s;"></div>
+  <div class="dream-orb" style="left:84%; top:84%; width:11px; height:11px; animation: float1 11s infinite ease-out 6s;"></div>
+  <div class="dream-orb" style="left:92%; top:78%; width:9px; height:9px; animation: float2 13s infinite ease-out 0.5s;"></div>
+  <div class="dream-orb" style="left:25%; top:94%; width:6px; height:6px; animation: float3 15s infinite ease-out 7s;"></div>
+  <div class="dream-orb" style="left:55%; top:90%; width:13px; height:13px; animation: float1 12s infinite ease-out 8s;"></div>
+  <svg class="photo-school" viewBox="0 0 800 380" xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" stroke-width="2.4">
+    <line x1="0" y1="320" x2="800" y2="320" stroke-width="1.5"/>
+    <polygon points="180,120 620,120 580,80 220,80"/>
+    <rect x="200" y="120" width="400" height="200"/>
+    <line x1="400" y1="120" x2="400" y2="320" stroke-width="1.2" opacity="0.5"/>
+    <line x1="200" y1="220" x2="600" y2="220" stroke-width="1.2" opacity="0.5"/>
+    <rect x="230" y="150" width="50" height="60"/>
+    <rect x="310" y="150" width="50" height="60"/>
+    <rect x="450" y="150" width="50" height="60"/>
+    <rect x="530" y="150" width="50" height="60"/>
+    <rect x="230" y="230" width="50" height="60"/>
+    <rect x="310" y="230" width="50" height="60"/>
+    <rect x="450" y="230" width="50" height="60"/>
+    <rect x="530" y="230" width="50" height="60"/>
+    <rect x="385" y="240" width="40" height="80"/>
+    <polyline points="380,235 425,235 430,225 380,225"/>
+    <circle cx="110" cy="270" r="50"/>
+    <line x1="110" y1="320" x2="110" y2="280" stroke-width="3"/>
+    <circle cx="700" cy="280" r="35"/>
+    <line x1="700" y1="320" x2="700" y2="290" stroke-width="3"/>
+    <line x1="660" y1="320" x2="660" y2="120" stroke-width="1.5"/>
+    <path d="M660 120 L700 135 L660 150 Z" stroke-width="1.5"/>
+    <circle cx="500" cy="60" r="22" opacity="0.4"/>
+    <circle cx="500" cy="60" r="14" opacity="0.6"/>
+  </svg>
+  <div class="photo-date">19XX · 6월</div>
+</div>
+
+<div id="hud" style="display:none">
+  <div class="row">
+    <div>
+      <div class="title" id="hud-title">학교 탐험</div>
+      <div id="hud-progress" style="color:var(--muted)"></div>
+    </div>
+    <div style="text-align:right">
+      <div class="title" id="hud-area">운동장</div>
+      <div id="hud-diff" style="color:var(--muted)"></div>
+    </div>
+  </div>
+</div>
+
+<div id="bottom-map" style="display:none">
+  <div class="label">
+    <span id="bm-floor">1F</span>
+    <span id="bm-progress"></span>
+  </div>
+  <div class="canvas"><canvas id="bm-canvas"></canvas></div>
+</div>
+
+<div id="gamepad-status" style="display:none">게임패드 미연결</div>
+
+<button id="quit-btn" style="display:none">⏻ 종료</button>
+
+<div id="key-inv">
+  <div class="title">열쇠 조각 <span id="key-count">0/0</span></div>
+  <div class="frags" id="key-frags"></div>
+</div>
+
+<div id="toast"></div>
+
+<div id="overlay" class="overlay"><div class="panel" id="panel"></div></div>
+
+<script>
+"use strict";
+
+// ──────────────────────────────────────────
+// 난이도
+// ──────────────────────────────────────────
+const DIFFICULTY = {
+  EASY: { label:"EASY", description:"스토리와 탐험 중심 난이도", recommended:"처음 플레이",
+    features:["쉬운 문제","힌트 자주","공간 왜곡 약함","해설 자세히","이상 현상 적음","퍼즐 단순"],
+    space_distortion:0.2, hint_frequency:1.0, anomaly_frequency:0.1,
+    lighting_glitch_rate:0.05, phantom_rate:0.0, fog:0.0,
+    question_difficulty:"easy" },
+  NORMAL: { label:"NORMAL", description:"기본 권장", recommended:"기본 플레이",
+    features:["일반 수준 문제","힌트 제한적","공간 왜곡 중간","복도 반복 연출","복합 퍼즐","분위기 강화"],
+    space_distortion:0.5, hint_frequency:0.5, anomaly_frequency:0.4,
+    lighting_glitch_rate:0.2, phantom_rate:0.1, fog:0.3,
+    question_difficulty:"normal" },
+  HARD: { label:"HARD", description:"심리적 긴장감 강화", recommended:"숙련자",
+    features:["어려운 문제","힌트 최소","공간 왜곡 강함","복도 변경","조명 이상↑","방송 노이즈↑","환영↑","퍼즐 복잡","맵 변화"],
+    extra:["음악 중단","문 위치 변경","뒤돌아보면 변화"],
+    space_distortion:0.9, hint_frequency:0.15, anomaly_frequency:0.8,
+    lighting_glitch_rate:0.6, phantom_rate:0.5, fog:0.55,
+    question_difficulty:"hard" },
+};
+
+const PHASE = { LOGIN:0, SUBJECT:1, DIFFICULTY:2, COUNT:3, NEW_OR_CONTINUE:4, SCHOOL_ENTRY:5, EXPLORATION:6, PUZZLE:7 };
+
+// 회원가입 때 선택하는 학년 (중1~고3) — 문제 수준과 분위기 난이도를 결정
+const GRADES = ["중1", "중2", "중3", "고1", "고2", "고3"];
+// 학년 → 내부 난이도(분위기/안개/힌트/샘플문제 난이도)에 매핑
+const GRADE_DIFF = { "중1":"EASY", "중2":"EASY", "중3":"NORMAL", "고1":"NORMAL", "고2":"HARD", "고3":"HARD" };
+// 과목은 입장할 때마다 이 중에서 무작위 선택
+const SUBJECTS = ["수학", "과학", "국어", "영어", "사회"];
+
+const state = {
+  subject:"", difficulty:"NORMAL", grade:"중1", questionCount:10, userId:"",
+  phase: PHASE.LOGIN, difficultyLocked:false, solved:0, currentFloor:1,
+  keyFragments: [],
+  exitUnlocked: false,
+  currentTrigger: null,
+  totalRequired: 0,
+  stage: 1,
+  maxStage: 3,
+  entered: false,
+  recent_questions: [],
+  recent_answers: [],
+  recent_choice_sets: [],
+  pendingResume: null,   // 이어하기 시 복원할 스테이지 내부 진행 데이터
+};
+const RECENT_LIMIT = 30;
+function addRecent(q) {
+  if (!q) return;
+  if (q.question) {
+    state.recent_questions.push(String(q.question));
+    while (state.recent_questions.length > RECENT_LIMIT) state.recent_questions.shift();
+  }
+  if (Array.isArray(q.choices) && q.choices.length > 0) {
+    const idx = Number(q.answer_index) || 0;
+    if (q.choices[idx] != null) {
+      state.recent_answers.push(String(q.choices[idx]));
+      while (state.recent_answers.length > RECENT_LIMIT) state.recent_answers.shift();
+    }
+    state.recent_choice_sets.push(q.choices.map(String).join(" / "));
+    while (state.recent_choice_sets.length > RECENT_LIMIT) state.recent_choice_sets.shift();
+  }
+}
+function clearRecent() {
+  state.recent_questions = [];
+  state.recent_answers = [];
+  state.recent_choice_sets = [];
+}
+
+// 스테이지별 설정 — 색상/구조/이름
+const STAGES = {
+  1: {
+    name: "갇힌 교실", subtitle: "수업이 끝나도 문이 열리지 않는다",
+    zone: "classroom",
+    overlay: "rgba(80,40,120,0.10)",
+    tile_filter: "",
+    extra_anomaly: 1.0,
+    spawn: { tx: 24, ty: 20 },
+    intro_toast: "교실 문이 잠겼다.\n책상·사물함·칠판을 조사해 열쇠 조각을 모아라.",
+    classroom_order: [0, 1, 2, 3, 4],
+    locker_color_shift: 0,
+    chalk_text: "오늘의 숙제: 탈출",
+  },
+  2: {
+    name: "텅 빈 복도", subtitle: "사물함만이 끝없이 늘어선다",
+    zone: "corridor",
+    overlay: "rgba(110,80,140,0.10)",
+    tile_filter: "hue-rotate(-12deg) saturate(0.88) brightness(0.90) contrast(1.03)",
+    extra_anomaly: 1.5,
+    spawn: { tx: 7, ty: 14 },
+    intro_toast: "복도로 나왔다.\n사물함을 조사해 동쪽 계단의 잠금을 풀어라.",
+    classroom_order: [2, 4, 0, 3, 1],
+    locker_color_shift: 30,
+    chalk_text: "수업 없음",
+  },
+  3: {
+    name: "1층 중앙홀", subtitle: "마지막 정문이 보인다",
+    zone: "central",
+    overlay: "rgba(80,110,160,0.10)",
+    tile_filter: "hue-rotate(18deg) saturate(0.85) brightness(0.90)",
+    extra_anomaly: 2.0,
+    spawn: { tx: 24, ty: 12 },
+    intro_toast: "중앙홀에 도착했다.\n남은 조각을 모두 모으고 정문을 통과해 탈출하라.",
+    classroom_order: [4, 3, 2, 1, 0],
+    locker_color_shift: -30,
+    chalk_text: "남쪽 정문",
+  },
+};
+function stageCfg() { return STAGES[state.stage] || STAGES[1]; }
+
+function advancePhase(next) {
+  state.phase = next;
+  if (next === PHASE.SCHOOL_ENTRY && !state.difficultyLocked) state.difficultyLocked = true;
+}
+function canSpawnQuestion() { return state.phase >= PHASE.EXPLORATION; }
+function cfg() { return DIFFICULTY[state.difficulty]; }
+
+// ──────────────────────────────────────────
+// Claude API
+// ──────────────────────────────────────────
+function getApiKey() { return localStorage.getItem("anthropic_api_key") || ""; }
+function setApiKey(k) { localStorage.setItem("anthropic_api_key", k); }
+
+const SYSTEM_PROMPT = `너는 한국 중·고교 교과 범위 객관식 문제 출제자다.
+최우선 의무: 매 호출마다 의미·소재·정답·보기·표현이 확연히 다른 새 문제 생성.
+사용자가 회피 목록을 주면 그 안의 어떤 항목과도 본질적으로 동일/유사 금지.
+같은 과목이라도 다음을 매번 다르게 골라라:
+- 출제 각도(계산/정의/사례/비교/추론/함정/자료해석 등)
+- 소재(인물/숫자/지역/사례/조건)
+- 정답 보기 위치(answer_index)
+- 보기 표현(이전 보기와 같은 단어/숫자 재사용 금지)
+출력은 반드시 사용자가 지정한 JSON 한 덩어리만. 코드블록·머리말·외부 텍스트 금지.`;
+
+const ANGLES = ["수치 계산 중심","개념 정의 확인","실생활·뉴스 사례 적용","두 개념의 차이 식별",
+  "두 개념의 공통점 식별","원인-결과 추론","오류·함정 찾기","그래프/표 해석","용어와 정의 매칭",
+  "단계적 풀이 빈칸 채우기","보기 중 가장 적절하지 않은 것 고르기","역사·시대 맥락 추론",
+  "실험 결과 해석","단위·조건 변환","짧은 지문 단답형","긴 지문 추론형"];
+
+const MATERIALS = ["숫자·수치 위주","인물·사건 위주","지역·지도 위주","실험·관찰 자료",
+  "실생활 가전·교통 사례","날씨·계절·기후 사례","사회 제도·법 사례","문학 작품 구절",
+  "신문 기사풍 짧은 글","학생 대화 한 토막","공학·기술 응용","환경·생태 주제"];
+
+const ANS_POS = [
+  "이번 정답 위치(answer_index)는 0이 되게.",
+  "이번 정답 위치(answer_index)는 1이 되게.",
+  "이번 정답 위치(answer_index)는 2가 되게.",
+  "이번 정답 위치(answer_index)는 3이 되게.",
+];
+
+function buildPrompt(grade, subject) {
+  let avoid = "";
+  if (state.recent_questions.length || state.recent_answers.length || state.recent_choice_sets.length) {
+    avoid = "\n[중복 절대 금지]\n";
+    if (state.recent_questions.length) {
+      avoid += "아래 문제 본문과 의미·구조·소재가 같거나 비슷한 문제 금지:\n"
+        + state.recent_questions.map(q => "- " + q).join("\n") + "\n";
+    }
+    if (state.recent_answers.length) {
+      avoid += "아래 정답들과 본질적으로 같은 정답이 나오는 문제 금지:\n"
+        + state.recent_answers.map(a => "- " + a).join("\n") + "\n";
+    }
+    if (state.recent_choice_sets.length) {
+      avoid += "아래 보기 묶음 중 어떤 것과도 보기 단어·표현이 겹치면 안 됨:\n"
+        + state.recent_choice_sets.map(c => "- " + c).join("\n") + "\n";
+    }
+    avoid += "위 목록과 완전히 다른 새 문제 1개만 출제.\n";
+  }
+  const angle = ANGLES[Math.floor(Math.random() * ANGLES.length)];
+  const material = MATERIALS[Math.floor(Math.random() * MATERIALS.length)];
+  const ans = ANS_POS[Math.floor(Math.random() * ANS_POS.length)];
+  const nonce = Date.now().toString(36) + "-" + Math.floor(Math.random() * 1e6).toString(36);
+  const variation = `\n[변형 시드] ${nonce}\n[출제 각도] ${angle}\n[소재 성격] ${material}\n[정답 위치] ${ans}\n[필수] 직전 문제와 표현·소재·정답·보기 어느 것도 겹치지 말 것.\n`;
+
+  return `[학년]\n${grade} (한국 교육과정 ${grade} 수준)\n\n[과목]\n${subject}\n\n[지시] 위 학년·과목의 한국 교육과정 범위 안에서 객관식 4지선다 문제 1개 출제. 난이도는 ${grade} 학생 수준에 정확히 맞춰라 — 그 학년이 배우지 않은 개념은 쓰지 말고, 너무 쉽지도 않게.\n${avoid}${variation}\n반드시 아래 JSON 한 덩어리만 출력 (코드블록 금지):\n{"question":"문제","choices":["a","b","c","d"],"answer_index":0,"explanation":"해설","hint":"힌트"}`;
+}
+
+async function requestQuestion(subject) {
+  if (!canSpawnQuestion()) throw new Error("탐험 단계 이전 - 문제 생성 금지");
+  const key = getApiKey();
+  if (!key) return fallbackQuestion(subject);
+  try {
+    const r = await fetch("https://api.anthropic.com/v1/messages", {
+      method:"POST",
+      headers:{"x-api-key":key,"anthropic-version":"2023-06-01",
+        "content-type":"application/json","anthropic-dangerous-direct-browser-access":"true"},
+      body: JSON.stringify({
+        model:"claude-opus-4-7",
+        max_tokens:1024,
+        temperature: 1.0,
+        system: SYSTEM_PROMPT,
+        messages:[{role:"user", content: buildPrompt(state.grade, subject)}]
+      }),
+    });
+    if (!r.ok) throw new Error("HTTP "+r.status);
+    const j = await r.json();
+    let t = j.content[0].text.trim();
+    if (t.startsWith("```")) t = t.replace(/^```[a-z]*\n?/, "").replace(/```$/, "").trim();
+    return JSON.parse(t);
+  } catch(e) { console.warn("API 실패:", e); return fallbackQuestion(subject); }
+}
+
+// 과목별 실제 교과 기반 문제 풀 - API 키 없을 때 / API 실패 시 사용.
+// 매 호출마다 회피 목록 + 랜덤 선택 + 보기 셔플(정답 위치 재배치)로 반복 차단.
+const QUESTION_BANK = {
+  "수학": {
+    EASY: [
+      { question:"9 + 8 = ?", choices:["15","16","17","18"], answer_index:2, explanation:"9+8=17", hint:"10 더하고 1 빼기" },
+      { question:"삼각형의 내각의 합은?", choices:["90°","180°","270°","360°"], answer_index:1, explanation:"삼각형 내각합은 180°", hint:"두 직각의 합" },
+      { question:"12의 약수가 아닌 것은?", choices:["3","4","5","6"], answer_index:2, explanation:"12÷5는 나누어 떨어지지 않음", hint:"12 ÷ ?" },
+      { question:"2/3 + 1/3 = ?", choices:["1/3","2/3","1","4/3"], answer_index:2, explanation:"분모가 같으니 분자만 더해 3/3=1", hint:"3/3" },
+      { question:"한 변이 5cm인 정사각형의 둘레는?", choices:["10cm","15cm","20cm","25cm"], answer_index:2, explanation:"5 × 4 = 20", hint:"변 4개" },
+      { question:"가장 작은 자연수는?", choices:["0","1","-1","2"], answer_index:1, explanation:"자연수는 1부터", hint:"음수도 0도 자연수 아님" },
+      { question:"-3과 5의 차이의 절댓값은?", choices:["2","3","5","8"], answer_index:3, explanation:"|5 - (-3)| = 8", hint:"거리 개념" },
+      { question:"백의 자리가 6, 십의 자리가 0, 일의 자리가 7인 수는?", choices:["67","607","670","6007"], answer_index:1, explanation:"607", hint:"세 자리 수" },
+    ],
+    NORMAL: [
+      { question:"x + 7 = 15 일 때 x는?", choices:["6","7","8","9"], answer_index:2, explanation:"양변에서 7을 빼면 x=8", hint:"양변에서 7 빼기" },
+      { question:"한 변이 6cm인 정육면체의 부피는?", choices:["36cm³","72cm³","216cm³","432cm³"], answer_index:2, explanation:"6³=216", hint:"가로×세로×높이" },
+      { question:"2x − 4 = 10 일 때 x는?", choices:["3","5","7","12"], answer_index:2, explanation:"2x=14, x=7", hint:"양변 +4 후 ÷2" },
+      { question:"원의 반지름이 4일 때 넓이는? (π=3.14)", choices:["12.56","25.12","50.24","100.48"], answer_index:2, explanation:"πr² = 3.14×16 = 50.24", hint:"πr²" },
+      { question:"분수 3/4를 소수로?", choices:["0.25","0.5","0.75","1.33"], answer_index:2, explanation:"3÷4=0.75", hint:"3 나누기 4" },
+      { question:"기울기가 2, y절편이 1인 직선의 방정식은?", choices:["y=x+2","y=2x+1","y=x+1","y=2x-1"], answer_index:1, explanation:"y=2x+1", hint:"y=mx+b" },
+      { question:"두 직선 y=2x+3, y=2x-1의 관계는?", choices:["직교","평행","일치","교차"], answer_index:1, explanation:"기울기 같고 절편 다름 → 평행", hint:"기울기 비교" },
+      { question:"확률이 1/4인 사건이 일어나지 않을 확률은?", choices:["1/4","1/2","2/3","3/4"], answer_index:3, explanation:"1 − 1/4 = 3/4", hint:"여사건" },
+    ],
+    HARD: [
+      { question:"이차방정식 x²−5x+6=0 의 해는?", choices:["x=1, 6","x=2, 3","x=-2, -3","x=0, 5"], answer_index:1, explanation:"(x−2)(x−3)=0", hint:"곱이 6, 합이 5인 두 수" },
+      { question:"함수 f(x)=2x²+1 의 f(3) 값은?", choices:["13","18","19","20"], answer_index:2, explanation:"2(9)+1=19", hint:"x=3 대입" },
+      { question:"log₂ 8 = ?", choices:["1","2","3","4"], answer_index:2, explanation:"2³=8", hint:"2의 몇 제곱?" },
+      { question:"sin 30° = ?", choices:["1/2","√2/2","√3/2","1"], answer_index:0, explanation:"sin 30°=1/2", hint:"특수각" },
+      { question:"수열 2, 4, 8, 16, ... 의 일반항은?", choices:["2n","n²","2ⁿ","n+2"], answer_index:2, explanation:"공비 2인 등비수열", hint:"비율" },
+      { question:"미분: d/dx (x³) = ?", choices:["x²","3x","3x²","x⁴"], answer_index:2, explanation:"멱승 미분", hint:"지수 내려옴" },
+      { question:"∫ 2x dx = ?", choices:["x²+C","2x²+C","x²/2+C","2x+C"], answer_index:0, explanation:"부정적분: x²+C", hint:"적분 후 미분 → 원래 함수" },
+    ],
+  },
+  "과학": {
+    EASY: [
+      { question:"물이 끓는 온도(1기압)는?", choices:["50°C","75°C","100°C","150°C"], answer_index:2, explanation:"표준기압에서 100°C", hint:"끓는점" },
+      { question:"공기 중 가장 많은 기체는?", choices:["산소","이산화탄소","수소","질소"], answer_index:3, explanation:"약 78%가 질소", hint:"산소는 약 21%" },
+      { question:"식물이 광합성에 쓰는 기체는?", choices:["산소","질소","이산화탄소","수소"], answer_index:2, explanation:"CO₂를 흡수해 O₂를 내놓음", hint:"낮에 일어남" },
+      { question:"물의 화학식은?", choices:["CO₂","H₂O","O₂","HO"], answer_index:1, explanation:"수소2 산소1", hint:"H+O" },
+      { question:"낮과 밤이 생기는 이유는?", choices:["지구 자전","지구 공전","달의 인력","태양의 움직임"], answer_index:0, explanation:"지구가 24시간에 한 바퀴 자전", hint:"하루 한 바퀴" },
+      { question:"얼음이 물이 되는 현상은?", choices:["응고","융해","기화","승화"], answer_index:1, explanation:"녹는 것=융해", hint:"고체→액체" },
+      { question:"척추동물이 아닌 것은?", choices:["개구리","뱀","문어","상어"], answer_index:2, explanation:"문어는 연체동물", hint:"등뼈 유무" },
+    ],
+    NORMAL: [
+      { question:"뉴턴 운동 제2법칙 공식은?", choices:["F=mv","F=ma","E=mc²","P=IV"], answer_index:1, explanation:"힘=질량×가속도", hint:"가속도와 비례" },
+      { question:"수소의 원자번호는?", choices:["1","2","6","8"], answer_index:0, explanation:"H = 1번", hint:"가장 가벼움" },
+      { question:"DNA 이중나선 구조를 밝힌 사람은?", choices:["다윈","멘델","왓슨-크릭","아인슈타인"], answer_index:2, explanation:"1953년 왓슨과 크릭", hint:"이중나선" },
+      { question:"전기 저항의 단위는?", choices:["볼트(V)","암페어(A)","옴(Ω)","와트(W)"], answer_index:2, explanation:"옴 Ω", hint:"옴의 법칙" },
+      { question:"달의 공전 주기는?", choices:["1주","약 2주","약 27일","약 365일"], answer_index:2, explanation:"약 27.3일", hint:"음력 한 달" },
+      { question:"pH < 7 인 용액의 성질은?", choices:["중성","산성","염기성","불안정"], answer_index:1, explanation:"7보다 작으면 산성", hint:"리트머스 빨강" },
+      { question:"세포 호흡의 최종 산물 두 가지는?", choices:["H₂O와 N₂","H₂O와 CO₂","O₂와 CO₂","O₂와 H₂"], answer_index:1, explanation:"포도당 + 산소 → 물 + 이산화탄소 + 에너지", hint:"내쉬는 숨" },
+    ],
+    HARD: [
+      { question:"광속(c)의 근삿값은?", choices:["3×10⁵ m/s","3×10⁸ m/s","3×10¹⁰ m/s","3×10¹² m/s"], answer_index:1, explanation:"약 3×10⁸ m/s", hint:"초당 30만 km" },
+      { question:"E = mc² 에서 m의 의미는?", choices:["속도","질량","에너지","파장"], answer_index:1, explanation:"질량", hint:"mass" },
+      { question:"열역학 제2법칙 관련 양은?", choices:["엔탈피","엔트로피","압력","온도"], answer_index:1, explanation:"엔트로피는 보통 증가", hint:"무질서도" },
+      { question:"감수분열로 만들어지는 세포는?", choices:["체세포","생식세포","줄기세포","적혈구"], answer_index:1, explanation:"정자/난자: 염색체 수 절반", hint:"유성생식" },
+      { question:"불확정성 원리를 제시한 사람은?", choices:["아인슈타인","하이젠베르크","슈뢰딩거","보어"], answer_index:1, explanation:"1927년 하이젠베르크", hint:"위치와 운동량" },
+      { question:"베이스에 H⁺ 추가 시 pH는?", choices:["증가","감소","불변","무관"], answer_index:1, explanation:"H⁺ 추가는 산성화 → pH 감소", hint:"산성↑ = pH↓" },
+    ],
+  },
+  "국어": {
+    EASY: [
+      { question:"'커다란' 의 품사는?", choices:["동사","형용사","부사","명사"], answer_index:1, explanation:"형용사", hint:"성질·상태" },
+      { question:"자음이 아닌 것은?", choices:["ㄱ","ㅏ","ㄴ","ㄷ"], answer_index:1, explanation:"ㅏ는 모음", hint:"기본 모음" },
+      { question:"'책' 의 받침은?", choices:["ㅂ","ㄱ","ㅅ","ㅈ"], answer_index:1, explanation:"받침 ㄱ", hint:"ㅊ+ㅐ+?" },
+      { question:"'아름답다' 의 반대말은?", choices:["멋지다","추하다","예쁘다","곱다"], answer_index:1, explanation:"추하다", hint:"미 ↔ 추" },
+      { question:"'동생이 밥을 먹는다' 의 목적어는?", choices:["동생","밥","먹는다","이"], answer_index:1, explanation:"을/를 앞: 밥", hint:"무엇을?" },
+      { question:"'산이 푸르다' 에서 주어는?", choices:["산","푸르다","이","없음"], answer_index:0, explanation:"산이 주어", hint:"무엇이?" },
+    ],
+    NORMAL: [
+      { question:"같은 자음이 행의 첫머리에 반복되는 기법은?", choices:["은유","비유","두운","대구"], answer_index:2, explanation:"두운법", hint:"첫 음 반복" },
+      { question:"'그의 마음은 바다이다' 의 비유법은?", choices:["직유","은유","활유","의인"], answer_index:1, explanation:"~이다 → 은유", hint:"직접 동일시" },
+      { question:"소설의 3요소가 아닌 것은?", choices:["인물","사건","배경","주제"], answer_index:3, explanation:"기본 3요소: 인물·사건·배경", hint:"주제는 별개" },
+      { question:"'그는 산처럼 강하다' 의 비유법은?", choices:["은유","직유","의인","활유"], answer_index:1, explanation:"~처럼 → 직유", hint:"~처럼·같이" },
+      { question:"수필의 특징이 아닌 것은?", choices:["주관적","개성적","허구적","경험적"], answer_index:2, explanation:"수필은 사실 기반", hint:"허구 ≠ 수필" },
+      { question:"'밤하늘이 운다' 는?", choices:["은유","직유","활유","과장"], answer_index:2, explanation:"무생물에 생명: 활유", hint:"감정 부여" },
+    ],
+    HARD: [
+      { question:"평시조의 한 행 음보 수는?", choices:["3","4","5","6"], answer_index:1, explanation:"각 장 4음보 기본", hint:"한 행 4박자" },
+      { question:"'홍길동전' 의 작자는?", choices:["김만중","박지원","허균","정약용"], answer_index:2, explanation:"최초의 한글 소설", hint:"조선 중기" },
+      { question:"높임 표현 '-습니다' 는?", choices:["주체 높임","객체 높임","상대 높임","겸양"], answer_index:2, explanation:"청자(상대)를 높임", hint:"듣는 이" },
+      { question:"가전체 문학의 특징은?", choices:["사실 기록","사물을 의인화한 전","개인 감정","역사 서술"], answer_index:1, explanation:"사물 의인화", hint:"가짜 전기" },
+    ],
+  },
+  "영어": {
+    EASY: [
+      { question:"'apple' 의 뜻은?", choices:["배","사과","포도","바나나"], answer_index:1, explanation:"사과", hint:"빨간 과일" },
+      { question:"I ___ a student.", choices:["am","is","are","be"], answer_index:0, explanation:"주어 I → am", hint:"1인칭" },
+      { question:"숫자 1 의 영어는?", choices:["two","one","three","four"], answer_index:1, explanation:"one", hint:"첫 번째" },
+      { question:"'cat' 의 뜻은?", choices:["개","고양이","쥐","말"], answer_index:1, explanation:"고양이", hint:"meow" },
+      { question:"현재진행형의 형태는?", choices:["am/is/are + 동사ing","be + 과거","will + 동사","have + 과거"], answer_index:0, explanation:"be + ~ing", hint:"지금 하는 중" },
+      { question:"단수→복수: 'book' →", choices:["book","books","bookes","bookies"], answer_index:1, explanation:"-s 붙임", hint:"규칙 복수" },
+      { question:"'big' 의 반대어는?", choices:["large","huge","small","tall"], answer_index:2, explanation:"small", hint:"크기 반대" },
+    ],
+    NORMAL: [
+      { question:"She has ___ to Paris three times.", choices:["go","gone","went","going"], answer_index:1, explanation:"현재완료 have+p.p.", hint:"have/has + ?" },
+      { question:"good의 비교급은?", choices:["gooder","more good","better","best"], answer_index:2, explanation:"불규칙 비교급", hint:"불규칙" },
+      { question:"'must' 의 의미는?", choices:["할 수 있다","해야 한다","하고 있다","했다"], answer_index:1, explanation:"의무", hint:"강한 의무" },
+      { question:"가산명사는?", choices:["water","money","book","music"], answer_index:2, explanation:"book만 셀 수 있음", hint:"개수" },
+      { question:"'yesterday' 의 뜻은?", choices:["오늘","내일","어제","지금"], answer_index:2, explanation:"어제", hint:"yester-" },
+      { question:"수동태 기본형은?", choices:["be + p.p.","have + p.p.","do + 동사원형","be + ing"], answer_index:0, explanation:"be + 과거분사", hint:"당함" },
+    ],
+    HARD: [
+      { question:"If I ___ rich, I would travel.", choices:["am","was","were","be"], answer_index:2, explanation:"가정법 과거: were", hint:"가정법" },
+      { question:"관계대명사 'whose' 는?", choices:["사물 주격","사람·사물 소유격","장소","시간"], answer_index:1, explanation:"소유격", hint:"소유" },
+      { question:"'in spite of' 의 의미는?", choices:["때문에","에도 불구하고","대신에","위해서"], answer_index:1, explanation:"양보", hint:"~에도" },
+      { question:"'I wish I ___ taller.' 빈칸은?", choices:["am","was","were","be"], answer_index:2, explanation:"가정법: were", hint:"비현실 소망" },
+    ],
+  },
+  "사회": {
+    EASY: [
+      { question:"대한민국의 수도는?", choices:["부산","대전","서울","인천"], answer_index:2, explanation:"서울", hint:"한강" },
+      { question:"지도에서 오른쪽은 어느 방위?", choices:["북","남","동","서"], answer_index:2, explanation:"동", hint:"방위표 관습" },
+      { question:"민주주의의 기본 원리는?", choices:["왕정","독재","국민주권","독점"], answer_index:2, explanation:"주권이 국민에게", hint:"국민이 주인" },
+      { question:"한국에서 가장 큰 섬은?", choices:["거제도","울릉도","제주도","강화도"], answer_index:2, explanation:"제주도", hint:"남쪽 바다" },
+      { question:"여름철에 부는 우리나라 계절풍 방향은?", choices:["북서","남동","북동","남서"], answer_index:1, explanation:"여름 남동, 겨울 북서", hint:"바다에서 육지로" },
+      { question:"가족의 가장 기본 형태는?", choices:["대가족","핵가족","공동체","사회"], answer_index:1, explanation:"부모+자녀", hint:"가장 작은 단위" },
+    ],
+    NORMAL: [
+      { question:"삼국 통일을 이룬 나라는?", choices:["고구려","백제","신라","가야"], answer_index:2, explanation:"신라 (7세기)", hint:"통일신라" },
+      { question:"산업혁명이 시작된 나라는?", choices:["프랑스","독일","영국","미국"], answer_index:2, explanation:"18세기 영국", hint:"증기기관" },
+      { question:"가격이 오르면 수요는 어떻게 변하나?", choices:["증가","감소","불변","무관"], answer_index:1, explanation:"수요 법칙", hint:"비쌀수록 덜 산다" },
+      { question:"법 체계의 최상위 규범은?", choices:["대통령령","국회법","행정법","헌법"], answer_index:3, explanation:"헌법", hint:"모든 법의 기준" },
+      { question:"조선의 마지막 국호는?", choices:["고려","조선","대한제국","조선왕국"], answer_index:2, explanation:"1897년 대한제국", hint:"황제국 선포" },
+      { question:"3·1 운동이 일어난 해는?", choices:["1910","1919","1945","1948"], answer_index:1, explanation:"1919년", hint:"기미독립선언" },
+    ],
+    HARD: [
+      { question:"헌법재판소의 권한이 아닌 것은?", choices:["위헌법률심판","탄핵심판","정당해산심판","법률 제정"], answer_index:3, explanation:"법률 제정은 국회", hint:"심판 기관" },
+      { question:"수요가 증가하면 균형 가격은?", choices:["하락","상승","불변","폭락"], answer_index:1, explanation:"수요↑ → 가격↑", hint:"균형 이동" },
+      { question:"GDP 는 무엇의 약자?", choices:["국내총생산","국가발전계획","국제달러가격","국민가처분소득"], answer_index:0, explanation:"Gross Domestic Product", hint:"한 해 생산총액" },
+      { question:"기후위기의 주요 원인은?", choices:["산소 증가","온실가스 증가","자외선 감소","바람 감소"], answer_index:1, explanation:"CO₂ 등 온실가스", hint:"탄소 배출" },
+    ],
+  },
+};
+
+// 과목+난이도별 출제 순번 - 풀 안의 모든 문제를 한 번씩 다 낼 때까지 반복 없음.
+const bankRotation = {};
+function pickFromBank(subject, difficulty) {
+  const subj = QUESTION_BANK[subject] || QUESTION_BANK["수학"];
+  const pool = subj[difficulty] || subj.NORMAL || [];
+  if (!pool.length) return null;
+  const key = subject + "|" + difficulty;
+  // 순번이 비었으면 풀 전체를 새로 섞어 채운다 (한 바퀴 다 돌아야 재등장).
+  if (!Array.isArray(bankRotation[key]) || bankRotation[key].length === 0) {
+    const order = pool.map((_, i) => i);
+    for (let i = order.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [order[i], order[j]] = [order[j], order[i]];
+    }
+    bankRotation[key] = order;
+  }
+  const picked = pool[bankRotation[key].pop()];
+  // 보기 셔플 - 매번 정답 위치가 달라지게.
+  const indexed = picked.choices.map((c, i) => ({ c, isAnswer: i === picked.answer_index }));
+  for (let i = indexed.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [indexed[i], indexed[j]] = [indexed[j], indexed[i]];
+  }
+  const newChoices = indexed.map(o => o.c);
+  const newAns = indexed.findIndex(o => o.isAnswer);
+  return {
+    question: picked.question,
+    choices: newChoices,
+    answer_index: newAns,
+    explanation: picked.explanation,
+    hint: picked.hint || "",
+  };
+}
+
+function fallbackQuestion(subject) {
+  return pickFromBank(subject, state.difficulty) || {
+    question: `[${subject}] 문제 풀이 데이터가 부족합니다. API 키를 입력하면 새 문제가 생성됩니다.`,
+    choices: ["계속","API 키 등록","로그아웃","무시"], answer_index: 0,
+    explanation: "샘플 모드: 풍부한 문제를 원하면 로그인 화면에서 Anthropic API 키를 등록하세요.",
+    hint: ""
+  };
+}
+
+// ──────────────────────────────────────────
+// UI 메뉴 흐름
+// ──────────────────────────────────────────
+const overlay = document.getElementById("overlay");
+const panel = document.getElementById("panel");
+const hud = document.getElementById("hud");
+const photoBg = document.getElementById("photo-bg");
+
+function showOverlay(show, opts={}) {
+  overlay.style.display = show ? "flex" : "none";
+  hud.style.display = show ? "none" : "block";
+  document.getElementById("bottom-map").style.display = show ? "none" : "block";
+  document.getElementById("gamepad-status").style.display = show ? "none" : "block";
+  document.getElementById("quit-btn").style.display = show ? "none" : "block";
+  photoBg.style.display = opts.photo ? "block" : "none";
+  overlay.classList.toggle("transparent", !!opts.photo);
+}
+
+// ── 계정 저장 (localStorage) ──
+function getAccounts() {
+  try { return JSON.parse(localStorage.getItem("accounts") || "{}"); }
+  catch (e) { return {}; }
+}
+function saveAccounts(a) { localStorage.setItem("accounts", JSON.stringify(a)); }
+function setAuthMsg(m) { const el = document.getElementById("auth-msg"); if (el) el.textContent = m || ""; }
+
+// 로그인 화면 - 기존 계정으로 입장
+function renderLogin() {
+  state.phase = PHASE.LOGIN;
+  showOverlay(true, { photo:true });
+  panel.className = "panel login";
+  panel.innerHTML = `
+    <h1>로 그 인</h1>
+    <p style="font-size:14px;color:#c8b48a;letter-spacing:2px">오래된 학교의 기록을 다시 펼칩니다</p>
+    <label>아이디</label>
+    <input id="uid" placeholder="아이디" value="${state.userId}" />
+    <label>비밀번호</label>
+    <input type="password" id="pw" placeholder="비밀번호" />
+    <p class="auth-msg" id="auth-msg"></p>
+    <p><button class="primary" id="login-btn">로 그 인</button></p>
+    <p class="auth-switch">처음이신가요? <button class="linkbtn" id="to-signup">회원가입</button></p>`;
+  const doLogin = () => {
+    const id = document.getElementById("uid").value.trim();
+    const pw = document.getElementById("pw").value;
+    if (!id) { setAuthMsg("아이디를 입력하세요."); return; }
+    const accs = getAccounts();
+    const acc = accs[id];
+    if (!acc) { setAuthMsg("존재하지 않는 아이디입니다. 회원가입을 해주세요."); return; }
+    if (acc.pw !== pw) { setAuthMsg("비밀번호가 일치하지 않습니다."); return; }
+    state.userId = id;
+    state.grade = acc.grade || "중1";
+    state.difficulty = GRADE_DIFF[state.grade] || "NORMAL";
+    setApiKey(acc.apiKey || "");
+    advancePhase(PHASE.NEW_OR_CONTINUE); renderNewOrContinue();
+  };
+  document.getElementById("login-btn").onclick = doLogin;
+  document.getElementById("pw").addEventListener("keydown", e => { if (e.key === "Enter") doLogin(); });
+  document.getElementById("to-signup").onclick = renderSignup;
+  document.getElementById("uid").focus();
+}
+
+// 회원가입 화면 - 새 계정 만들기 (아이디·비밀번호·학년)
+function renderSignup() {
+  state.phase = PHASE.LOGIN;
+  showOverlay(true, { photo:true });
+  panel.className = "panel login";
+  const grades = GRADES.map(g =>
+    `<button class="grade-btn ${state.grade === g ? "sel" : ""}" data-g="${g}">${g}</button>`).join("");
+  panel.innerHTML = `
+    <h1>회 원 가 입</h1>
+    <p style="font-size:14px;color:#c8b48a;letter-spacing:2px">학년을 정하고 학교의 기록에 이름을 올립니다</p>
+    <label>아이디</label>
+    <input id="uid" placeholder="사용할 아이디" value="${state.userId}" />
+    <label>비밀번호</label>
+    <input type="password" id="pw" placeholder="비밀번호" />
+    <label>학년 (중1 ~ 고3)</label>
+    <div class="grade-grid">${grades}</div>
+    <label>Anthropic API Key (선택)</label>
+    <input type="password" id="api" placeholder="sk-ant-... (비우면 샘플 문제)" value="${getApiKey()}" />
+    <p style="font-size:13px;color:#a89ac8;margin:10px 0 0;line-height:1.5">
+      · 과목은 입장할 때마다 무작위로 정해집니다.<br>
+      · 모아야 할 열쇠 개수도 무작위입니다 (문제 1개 = 열쇠 1개).</p>
+    <p class="auth-msg" id="auth-msg"></p>
+    <p><button class="primary" id="signup-btn">가 입 하 고 입 장</button></p>
+    <p class="auth-switch">이미 계정이 있나요? <button class="linkbtn" id="to-login">로그인</button></p>`;
+  panel.querySelectorAll(".grade-btn").forEach(b => {
+    b.onclick = () => {
+      state.grade = b.dataset.g;
+      panel.querySelectorAll(".grade-btn").forEach(x => x.classList.toggle("sel", x.dataset.g === state.grade));
+    };
+  });
+  document.getElementById("signup-btn").onclick = () => {
+    const id = document.getElementById("uid").value.trim();
+    const pw = document.getElementById("pw").value;
+    if (!id) { setAuthMsg("아이디를 입력하세요."); return; }
+    if (!pw) { setAuthMsg("비밀번호를 입력하세요."); return; }
+    const accs = getAccounts();
+    if (accs[id]) { setAuthMsg("이미 사용 중인 아이디입니다. 다른 아이디를 쓰거나 로그인하세요."); return; }
+    const api = document.getElementById("api").value.trim();
+    accs[id] = { pw, grade: state.grade, apiKey: api };
+    saveAccounts(accs);
+    state.userId = id;
+    state.difficulty = GRADE_DIFF[state.grade] || "NORMAL";
+    setApiKey(api);
+    advancePhase(PHASE.NEW_OR_CONTINUE); renderNewOrContinue();
+  };
+  document.getElementById("to-login").onclick = renderLogin;
+  document.getElementById("uid").focus();
+}
+
+// 새 게임마다 과목을 무작위로 뽑고, 난이도는 학년에 맞춤
+function rollGameParams() {
+  state.subject = SUBJECTS[Math.floor(Math.random() * SUBJECTS.length)];
+  state.difficulty = GRADE_DIFF[state.grade] || "NORMAL";
+}
+
+// 진행 상황 저장 (스테이지 + 스테이지 내부 진행까지 - 이어하기로 그대로 재개)
+function saveGame() {
+  if (!state.userId) return;
+  localStorage.setItem("save_" + state.userId, JSON.stringify({
+    grade: state.grade, subject: state.subject, difficulty: state.difficulty,
+    stage: state.stage, solved: state.solved,
+    fragments: state.keyFragments.length, total: state.totalRequired,
+    floor: state.currentFloor,
+    px: player.x, py: player.y,            // 마지막 위치 - 그 자리에서 재개
+    recent: state.recent_questions.slice(-40),  // 최근 문제 - 이어하기 후에도 중복 방지
+  }));
+}
+
+// 종료 확인창 - "종료하시겠습니까?" 표시 후 저장
+function renderQuitConfirm() {
+  if (!state.userId) return;
+  saveGame();   // 띄우는 즉시 한 번 저장 (안전)
+  state.phase = PHASE.PUZZLE;   // 잠시 멈춤
+  showOverlay(true);
+  panel.className = "panel";
+  panel.innerHTML = `<h1>종료하시겠습니까?</h1>
+    <p style="font-size:16px">진행 상황은 자동으로 저장됩니다.<br>
+    다음에 <b style="color:var(--accent)">이어하기</b>로 STAGE ${state.stage}부터 계속할 수 있어요.</p>
+    <p><button class="primary" id="quit-yes">저장하고 종료</button>
+       <button id="quit-no">계속하기</button></p>`;
+  document.getElementById("quit-yes").onclick = () => {
+    saveGame();
+    advancePhase(PHASE.NEW_OR_CONTINUE);
+    renderNewOrContinue();      // 타이틀 메뉴로 (이어하기 / 로그아웃 가능)
+  };
+  document.getElementById("quit-no").onclick = () => {
+    showOverlay(false);
+    state.phase = PHASE.EXPLORATION;
+  };
+}
+
+function renderHowToPlay() {
+  showOverlay(true);
+  panel.className = "panel";
+  panel.innerHTML = `
+    <h1>★ 하는 법 ★</h1>
+    <h2>1. 목표</h2>
+    <p style="font-size:16px">학교에 갇혔다. 모든 출구가 잠겨 있다.<br>
+    각 구역의 <b style="color:#ffaa44">🗝 열쇠 조각</b>을 모두 모아<br>
+    잠긴 문을 열고 다음 구역으로 나아가라.</p>
+
+    <h2>2. 진행 구조</h2>
+    <p style="font-size:16px">
+      <b>STAGE 1</b> 갇힌 교실 → <b>STAGE 2</b> 텅 빈 복도 → <b>STAGE 3</b> 1층 중앙홀<br>
+      각 스테이지의 모든 조각을 모으면 출구가 열린다.
+    </p>
+
+    <h2>3. 조작</h2>
+    <p style="font-size:16px">
+      • <b>이동:</b> W A S D 또는 방향키<br>
+      • <b>조사:</b> E 키<br>
+      • <b>마우스 풀기:</b> ESC<br>
+      • <b>Joy-Con:</b> 왼쪽 스틱 이동 · A버튼 조사
+    </p>
+
+    <h2>4. 단서 찾는 법</h2>
+    <p style="font-size:16px">
+      탐험 중 화면에 <b style="color:#ffe080">노란 반짝임 ✦</b> 이 보이면<br>
+      그 위치에 가까이 가서 <b>E</b>를 누르세요.<br>
+      퍼즐을 풀면 열쇠 조각을 1개 얻습니다.<br>
+      <span style="color:var(--muted)">오답이어도 다시 도전할 수 있습니다.</span>
+    </p>
+
+    <h2>5. 단서 위치</h2>
+    <p style="font-size:16px">
+      • <b>교실:</b> 사물함, 책상, 칠판, 교탁<br>
+      • <b>복도:</b> 양쪽 사물함 줄<br>
+      • <b>중앙홀:</b> 중앙 분수대, 거울, 자판기, 트로피장, 안내 게시판, 벤치
+    </p>
+
+    <h2>6. 탈출</h2>
+    <p style="font-size:16px">
+      마지막 스테이지의 <b style="color:var(--accent)">남쪽 정문</b>을<br>
+      통과하면 최종 탈출 성공!
+    </p>
+
+    <p><button id="back-btn">← 뒤로</button><button class="primary" id="next-btn">시작하기 →</button></p>`;
+  document.getElementById("back-btn").onclick = renderNewOrContinue;
+  document.getElementById("next-btn").onclick = () => { state.pendingResume = null; clearRecent(); state.stage = 1; rollGameParams(); enterSchool(); };
+}
+
+function renderSubject() {
+  showOverlay(true);
+  panel.className = "panel";
+  panel.innerHTML = `<h1>과목 선택</h1>
+    <p style="font-size:14px;color:var(--muted)">이 과목으로 학교 곳곳의 퍼즐이 출제됩니다.</p>
+    <label>탐험할 과목</label>
+    <input id="subject-input" placeholder="예: 수학, 영어, 과학" value="${state.subject}" />
+    <p><button id="back-btn">← 뒤로</button><button class="primary" id="next-btn">다음 →</button></p>`;
+  document.getElementById("back-btn").onclick = renderHowToPlay;
+  document.getElementById("next-btn").onclick = () => {
+    const s = document.getElementById("subject-input").value.trim();
+    if (!s) return;
+    state.subject = s; advancePhase(PHASE.DIFFICULTY); renderDifficulty();
+  };
+}
+
+function renderDifficulty() {
+  showOverlay(true);
+  panel.className = "panel";
+  const cards = ["EASY","NORMAL","HARD"].map(k => {
+    const d = DIFFICULTY[k];
+    const extra = d.extra ? `<p style="margin:6px 0 0;color:var(--warn);font-size:14px">+ ${d.extra.join(", ")}</p>` : "";
+    return `<div class="difficulty-card ${state.difficulty===k?"selected":""}" data-k="${k}">
+      <h3>${d.label}</h3>
+      <p style="margin:2px 0;color:var(--muted);font-size:14px">${d.description}</p>
+      <ul>${d.features.map(f=>`<li>${f}</li>`).join("")}</ul>${extra}
+    </div>`;
+  }).join("");
+  panel.innerHTML = `<h1>난이도 <span class="lock-badge">시작 후 변경 불가</span></h1>${cards}
+    <p><button id="back-btn">← 뒤로</button><button class="primary" id="next-btn">다음 →</button></p>`;
+  document.querySelectorAll(".difficulty-card").forEach(c => {
+    c.onclick = () => { if (state.difficultyLocked) return; state.difficulty = c.dataset.k; renderDifficulty(); };
+  });
+  document.getElementById("back-btn").onclick = renderSubject;
+  document.getElementById("next-btn").onclick = () => { renderCount(); };
+}
+
+function renderCount() {
+  showOverlay(true);
+  panel.className = "panel";
+  panel.innerHTML = `<h1>탈출에 필요한 열쇠 조각 수</h1>
+    <p style="font-size:14px;color:var(--muted)">정문 잠금 해제에 필요한 조각 수 (= 풀어야 할 퍼즐 수). 최대 11개</p>
+    <label>몇 개 (1~11)</label>
+    <input type="number" id="count-input" min="1" max="11" value="${Math.min(state.questionCount, 11)}" />
+    <p><button id="back-btn">← 뒤로</button><button class="primary" id="next-btn">시 작 →</button></p>`;
+  document.getElementById("back-btn").onclick = renderDifficulty;
+  document.getElementById("next-btn").onclick = () => {
+    const n = parseInt(document.getElementById("count-input").value, 10);
+    if (isNaN(n) || n < 1) return;
+    state.questionCount = Math.min(11, n);
+    enterSchool();
+  };
+}
+
+function renderNewOrContinue() {
+  showOverlay(true);
+  panel.className = "panel";
+  const hasSave = !!localStorage.getItem("save_" + state.userId);
+  panel.innerHTML = `<h1>${state.userId} 님, 어서오세요</h1>
+    <p style="font-size:16px">무엇을 하시겠습니까?</p>
+    <p>
+      <button class="primary" id="new-btn">★ 새 게 임</button>
+      <button id="cont-btn" ${hasSave?"":"disabled"}>이어하기</button>
+    </p>
+    <p><button id="howto-btn">하는 법 보기</button><button id="logout-btn">← 로그아웃</button></p>`;
+  document.getElementById("new-btn").onclick = renderHowToPlay;
+  document.getElementById("cont-btn").onclick = () => {
+    const saved = localStorage.getItem("save_" + state.userId);
+    let ok = false;
+    state.pendingResume = null;
+    if (saved) {
+      try {
+        const s = JSON.parse(saved);
+        if (s.grade) state.grade = s.grade;
+        if (s.stage) state.stage = Math.min(state.maxStage, Math.max(1, s.stage));  // 저장된 스테이지부터 재개
+        state.difficulty = GRADE_DIFF[state.grade] || s.difficulty || "NORMAL";
+        if (s.subject) state.subject = s.subject;
+        if (Array.isArray(s.recent)) state.recent_questions = s.recent.slice(-40);  // 최근 문제 복원 (중복 방지 유지)
+        state.pendingResume = s;   // 스테이지 내부 진행(열쇠·위치)은 initGame 에서 복원
+        ok = true;
+      } catch(e) {}
+    }
+    if (!ok || !state.subject) rollGameParams();
+    enterSchool();
+  };
+  document.getElementById("howto-btn").onclick = renderHowToPlay;
+  document.getElementById("logout-btn").onclick = () => { state.userId = ""; advancePhase(PHASE.LOGIN); renderLogin(); };
+}
+
+function enterSchool() {
+  advancePhase(PHASE.SCHOOL_ENTRY);
+  advancePhase(PHASE.EXPLORATION);
+  showOverlay(false);
+  initGame();
+}
+
+// ──────────────────────────────────────────
+// 2D 픽셀 게임
+// ──────────────────────────────────────────
+const canvas = document.getElementById("c");
+const ctx = canvas.getContext("2d");
+ctx.imageSmoothingEnabled = false;
+const off = document.createElement("canvas");
+const offCtx = off.getContext("2d");
+offCtx.imageSmoothingEnabled = false;
+
+const TILE = 64;        // 타일 해상도 (픽셀을 더 잘게: 32→64, 출력 1배)
+const SCALE = 1;        // 화면 픽셀 / 소스 픽셀
+const T_SCREEN = TILE * SCALE;
+
+// 타일 종류
+const TILE_VOID=0, TILE_GRASS=1, TILE_SAND=2, TILE_FLOOR=3, TILE_WALL=4,
+      TILE_LOCKER=5, TILE_LOCKER_GLOW=6, TILE_DESK=7, TILE_DOOR=8,
+      TILE_CHALK=9, TILE_BATH=10, TILE_PUDDLE=11, TILE_MIRROR=12,
+      TILE_TOILET=13, TILE_SINK=14, TILE_STAIRS_UP=15, TILE_STAIRS_DOWN=16,
+      TILE_PULLUP=17, TILE_FENCE=18, TILE_TRACK=19, TILE_GOAL=20,
+      TILE_BENCH=21, TILE_ENTRANCE=22, TILE_LOCKED_DOOR=23,
+      // 장식 타일 (교실/복도/중앙홀 꾸미기)
+      TILE_WINDOW=24, TILE_BOOKSHELF=25, TILE_PLANT=26, TILE_BOARD=27,
+      TILE_CLOCK=28, TILE_PODIUM=29, TILE_PAPER=30, TILE_VENDING=31,
+      TILE_FOUNTAIN=32, TILE_EXTING=33, TILE_STATUE=34, TILE_RUG=35,
+      TILE_INFODESK=36, TILE_MARBLE=37, TILE_PILLAR=38, TILE_TROPHY=39,
+      // 복도 원목 벽/문 (레퍼런스 스타일)
+      TILE_WOODWALL=40, TILE_WOODDOOR=41;
+
+// 충돌 가능한 타일 (DOOR, PUDDLE, BENCH, GOAL, PAPER, RUG 는 통과 가능)
+const SOLID = new Set([TILE_VOID, TILE_WALL, TILE_LOCKER, TILE_LOCKER_GLOW,
+  TILE_DESK, TILE_CHALK, TILE_MIRROR, TILE_TOILET,
+  TILE_SINK, TILE_PULLUP, TILE_FENCE, TILE_LOCKED_DOOR,
+  TILE_WINDOW, TILE_BOOKSHELF, TILE_PLANT, TILE_BOARD, TILE_CLOCK,
+  TILE_PODIUM, TILE_VENDING, TILE_FOUNTAIN, TILE_EXTING, TILE_STATUE,
+  TILE_INFODESK, TILE_PILLAR, TILE_TROPHY, TILE_WOODWALL, TILE_WOODDOOR]);
+
+// 바닥 위에 얹히는 장식물 - 바닥을 먼저 깔고 그 위에 그림
+const OVERLAY_TILES = new Set([TILE_DESK, TILE_PLANT, TILE_PAPER, TILE_PODIUM,
+  TILE_BENCH, TILE_STATUE, TILE_INFODESK, TILE_PILLAR, TILE_VENDING,
+  TILE_PUDDLE, TILE_RUG]);
+
+const MAP_W = 50, MAP_H = 32;
+let map1, map2;
+const triggers = []; // {tx, ty, floor, type, label, used}
+const stairLinks = []; // {tx, ty, floor, target:{floor,tx,ty}}
+
+// 플레이어 (월드 픽셀)
+const player = {
+  x: 25 * TILE + TILE/2,
+  y: 22 * TILE + TILE/2,
+  dir: 'up',
+  speed: 440,  // 타일 64px에 맞춰 월드픽셀/초 비례 - 체감 속도 동일
+  size: 12,    // 64px 타일 대비 작은 충돌 박스 → 통로 잘 통과
+};
+
+// ──────────────────────────────────────────
+// 타일 스프라이트 (32x32 픽셀, 캔버스에 직접 그림)
+// ──────────────────────────────────────────
+const sprites = {};
+const floorVariants = [];      // 회청색 마룻바닥 (복도)
+const classFloorVariants = []; // 따뜻한 원목 마룻바닥 (교실 - 레퍼런스 스타일)
+const marbleVariants = [];     // 대리석 바닥 변형 (중앙홀, 체크무늬)
+// 기존 32px 아트를 64 타일에 2배로 그림 (호환 - 출력은 종전과 동일)
+function makeSprite(drawFn) {
+  const c = document.createElement("canvas");
+  c.width = TILE; c.height = TILE;
+  const cx = c.getContext("2d");
+  cx.imageSmoothingEnabled = false;
+  cx.save(); cx.scale(2, 2); drawFn(cx); cx.restore();
+  return c;
+}
+// 네이티브 64px 아트 (픽셀을 더 잘게 - 바닥/벽/플레이어 등 큰 면)
+function makeSpriteHi(drawFn) {
+  const c = document.createElement("canvas");
+  c.width = TILE; c.height = TILE;
+  const cx = c.getContext("2d");
+  cx.imageSmoothingEnabled = false;
+  drawFn(cx);
+  return c;
+}
+// 픽셀 찍기 헬퍼
+function P(cx, color, x, y, w, h) {
+  cx.fillStyle = color;
+  cx.fillRect(x, y, w == null ? 1 : w, h == null ? 1 : h);
+}
+// 구형 16px 스프라이트를 확대해 쓰는 래퍼 (현재 스테이지에서 안 쓰는 타일용)
+function makeLegacySprite(drawFn) {
+  return makeSprite(cx => { cx.save(); cx.scale(2, 2); drawFn(cx, 16); cx.restore(); });
+}
+
+function buildSprites() {
+  // ── 기본 바닥/벽 (다른 스프라이트의 베이스가 되므로 가장 먼저) ──
+
+  // 복도 바닥 - 매끈한 회청색 비닐장판, 64px 세밀
+  function drawVinyl(cx, seed) {
+    P(cx,"#565c6a",0,0,64,64);
+    P(cx,"#5e6472",0,0,64,1);                      // 미세한 반사 띠
+    P(cx,"#4c5160",0,63,64,1);
+    // 큰 장판 줄눈 (아주 옅게, 타일 경계)
+    P(cx,"#4e5462",(seed%2)*32,0,1,64);
+    P(cx,"#525868",0,(seed%2)*32,64,1);
+    // 은은한 광택 / 얼룩
+    P(cx,"rgba(255,255,255,0.05)",10,12,28,14);
+    P(cx,"rgba(0,0,0,0.05)",36+(seed*7)%10,38,18,12);
+    // 미세 점박이 (1px = 더 잘게)
+    const dots = [[14,44],[44,18],[26,28],[52,50],[8,34],[58,12],[34,56],[20,8],[48,36],[12,22]];
+    dots.forEach(([x,y],i)=>P(cx, i%2 ? "#505664" : "#606676", (x+seed*3)%62, (y+seed*5)%62, 1,1));
+  }
+  floorVariants.length = 0;
+  floorVariants.push(
+    makeSpriteHi(cx => drawVinyl(cx, 0)),
+    makeSpriteHi(cx => drawVinyl(cx, 1)),
+    makeSpriteHi(cx => drawVinyl(cx, 2)),
+    makeSpriteHi(cx => drawVinyl(cx, 3))
+  );
+  sprites[TILE_FLOOR] = floorVariants[0];
+
+  // 따뜻한 원목 마룻바닥 (교실) - 64px 세밀, 가로 판자
+  function drawWarmFloor(cx, seed) {
+    P(cx,"#5c4632",0,0,64,64);
+    for (let i = 0; i < 4; i++) {
+      const y = i * 16;
+      P(cx,"#96704c",0,y,64,14);                   // 판자 본면
+      P(cx,"#a87e56",0,y,64,1);                    // 윗면 하이라이트
+      P(cx,"#8a6440",0,y+1,64,1);                  // 부드러운 결
+      P(cx,"#6e5236",0,y+14,64,2);                 // 판자 사이 틈
+      const off = ((i + seed) % 2) * 32 + 16;      // 이음새 엇갈림
+      P(cx,"#6e5236",off,y,1,14);
+      // 나뭇결 (가는 줄 여러개)
+      P(cx,"#876446",(seed*7+i*11)%44+4, y+5, 14,1);
+      P(cx,"#9e7850",(seed*13+i*5)%40+8, y+9, 10,1);
+      P(cx,"#82603e",(seed*5+i*7)%48+6, y+12, 8,1);
+    }
+  }
+  classFloorVariants.length = 0;
+  classFloorVariants.push(
+    makeSpriteHi(cx => drawWarmFloor(cx, 0)),
+    makeSpriteHi(cx => drawWarmFloor(cx, 1)),
+    makeSpriteHi(cx => { drawWarmFloor(cx, 2);
+      P(cx,"#6e5236",12,20,24,1); P(cx,"#6e5236",34,22,14,1);  // 긁힌 자국
+    }),
+    makeSpriteHi(cx => { drawWarmFloor(cx, 1);
+      P(cx,"rgba(40,26,14,0.28)",34,34,22,18);                 // 햇빛 닳은 얼룩
+    })
+  );
+
+  // 대리석 바닥 (중앙홀) - 밝음/어두움 체크무늬, 64px 세밀
+  function drawMarble(cx, light) {
+    const base = light ? "#4a4a5a" : "#3a3a48";
+    P(cx, base, 0,0,64,64);
+    P(cx, light ? "#565666" : "#444452", 0,0,64,1);
+    P(cx, light ? "#565666" : "#444452", 0,0,1,64);
+    P(cx,"#2a2a36",63,0,1,64); P(cx,"#2a2a36",0,63,64,1);
+    // 대리석 결 (가는 사선 줄무늬 - 여러 갈래)
+    const vein = light ? "#5c5c6e" : "#46465a";
+    P(cx, vein, 8,12,22,1); P(cx, vein, 16,15,26,1); P(cx, vein, 36,18,18,1);
+    P(cx, vein, 12,38,18,1); P(cx, vein, 24,41,30,1); P(cx, vein, 40,54,20,1);
+    const vein2 = light ? "#525262" : "#404052";
+    P(cx, vein2, 28,26,26,1); P(cx, vein2, 4,50,22,1); P(cx, vein2, 44,8,14,1);
+    // 잔결 (더 가늘게)
+    const vein3 = light ? "#54546a" : "#42425a";
+    P(cx, vein3, 10,28,8,1); P(cx, vein3, 50,44,10,1); P(cx, vein3, 32,48,12,1);
+    P(cx, vein3, 18,6,9,1); P(cx, vein3, 6,20,7,1);
+  }
+  marbleVariants.length = 0;
+  marbleVariants.push(
+    makeSpriteHi(cx => drawMarble(cx, true)),
+    makeSpriteHi(cx => drawMarble(cx, false))
+  );
+  sprites[TILE_MARBLE] = marbleVariants[0];
+
+  // 벽 - 패널 + 몰딩 + 굽도리
+  sprites[TILE_WALL] = makeSprite(cx => {
+    P(cx,"#3e3e4a",0,0,32,32);
+    P(cx,"#5a5a68",0,0,32,3);                      // 천장 몰딩
+    P(cx,"#4a4a58",0,3,32,1);
+    // 벽 패널 가로선
+    P(cx,"#34343e",0,11,32,1); P(cx,"#34343e",0,21,32,1);
+    // 패널 세로선 (벽돌처럼 엇갈림)
+    P(cx,"#34343e",16,4,1,7); P(cx,"#34343e",8,12,1,9); P(cx,"#34343e",24,12,1,9);
+    P(cx,"#34343e",16,22,1,6);
+    // 미세한 얼룩
+    P(cx,"#383844",4,7,3,1); P(cx,"#444452",20,16,4,1);
+    // 굽도리(베이스보드)
+    P(cx,"#2c2c36",0,28,32,4);
+    P(cx,"#383844",0,28,32,1);
+    P(cx,"#1a1a24",0,31,32,1);
+  });
+
+  sprites[TILE_VOID] = makeSprite(cx => { P(cx,"#0a0a14",0,0,32,32); });
+
+  // ── 사물함 (단서 사물함은 빛이 새어나옴) ──
+  sprites[TILE_LOCKER] = makeSprite(cx => drawLocker(cx, false));
+  sprites[TILE_LOCKER_GLOW] = makeSprite(cx => drawLocker(cx, true));
+
+  // ── 책상 (의자 + 교과서 + 공책) ──
+  // 책상 - 레퍼런스 스타일: 위에서 본 원목 책상 + 아래 의자, 칠판(북쪽)을 향함
+  sprites[TILE_DESK] = makeSprite(cx => {
+    cx.clearRect(0,0,32,32);
+    // 의자 (책상 남쪽 - 학생이 앉는 자리)
+    P(cx,"rgba(0,0,0,0.22)",9,24,15,4);            // 의자 그림자
+    P(cx,"#7c5838",9,22,14,6);                     // 좌판
+    P(cx,"#926a44",9,22,14,1);                     // 좌판 윗면
+    P(cx,"#5e4026",9,27,14,1);                     // 좌판 아랫면
+    P(cx,"#6a4a2e",10,23,1,5); P(cx,"#6a4a2e",21,23,1,5);  // 의자 옆 음영
+    // 책상 그림자
+    P(cx,"rgba(0,0,0,0.26)",4,18,25,3);
+    // 책상 상판 (따뜻한 원목)
+    P(cx,"#b0855a",3,4,26,15);
+    P(cx,"#ca9c6e",4,5,24,2);                      // 윗면 하이라이트
+    P(cx,"#9a7048",4,7,24,11);
+    P(cx,"#7e5a38",3,18,26,1);                     // 앞면 음영
+    // 상판 나뭇결
+    P(cx,"#a47c50",7,10,13,1); P(cx,"#a47c50",9,14,11,1);
+    // 책 한 권 (차분한 남색 - 톤 유지)
+    P(cx,"#46506a",17,8,9,7); P(cx,"#56607c",17,8,9,1);
+    P(cx,"#cbc6b8",17,14,9,1);                     // 책배(종이)
+    // 책상 옆 갈고리(다리)
+    P(cx,"#4a4a52",4,19,2,4); P(cx,"#4a4a52",26,19,2,4);
+  });
+
+  // ── 칠판 (분필 글씨 + 받침대 + 지우개) ──
+  sprites[TILE_CHALK] = makeSprite(cx => {
+    cx.drawImage(sprites[TILE_WALL],0,0,32,32);
+    // 나무 테두리 (잿빛 낡은 나무)
+    P(cx,"#54483c",0,2,32,24);
+    P(cx,"#6a5e50",0,2,32,2);
+    P(cx,"#3a322a",0,24,32,2);
+    // 칠판 면
+    P(cx,"#1c3a2c",2,4,28,20);
+    P(cx,"#234534",3,5,26,18);
+    // 분필 글씨 (여러 줄)
+    P(cx,"#cfe8cf",5,7,5,1); P(cx,"#cfe8cf",12,7,8,1); P(cx,"#cfe8cf",23,7,4,1);
+    P(cx,"#bfd8bf",6,11,9,1); P(cx,"#bfd8bf",18,11,7,1);
+    P(cx,"#cfe8cf",5,15,4,1); P(cx,"#cfe8cf",11,15,11,1);
+    P(cx,"#afc8af",7,19,13,1);
+    // 분필 지운 자국
+    P(cx,"rgba(200,230,200,0.10)",16,12,11,8);
+    // 분필 받침대
+    P(cx,"#463c30",0,26,32,3);
+    P(cx,"#5a5044",0,26,32,1);
+    P(cx,"#b8b8b0",4,27,5,1);                      // 분필
+    P(cx,"#aaa294",12,27,4,1);                     // 닳은 분필
+    P(cx,"#343e48",22,26,7,3); P(cx,"#48525c",22,26,7,1);  // 지우개
+  });
+
+  // ── 문 (교실 문) ──
+  sprites[TILE_DOOR] = makeSprite(cx => {
+    cx.drawImage(sprites[TILE_WALL],0,0,32,32);
+    // 문틀
+    P(cx,"#241e18",4,1,24,30);
+    // 문짝 (잿빛 낡은 나무)
+    P(cx,"#4a4036",6,2,20,28);
+    P(cx,"#5e5448",7,3,18,2);
+    // 작은 유리창
+    P(cx,"#242c3e",9,6,14,7); P(cx,"#323e54",10,7,12,5);
+    P(cx,"rgba(255,255,255,0.10)",11,7,3,5);
+    // 아래 패널
+    P(cx,"#322a20",8,17,16,10); P(cx,"#3c3428",9,18,14,8);
+    // 손잡이
+    P(cx,"#9a988c",22,14,3,3); P(cx,"#6a685e",23,15,1,1);
+  });
+
+  // ── 복도 원목 패널 벽 (레퍼런스의 따뜻한 나무 벽) ──
+  sprites[TILE_WOODWALL] = makeSprite(cx => {
+    P(cx,"#7a563a",0,0,32,32);                     // 원목 베이스
+    P(cx,"#8c6644",0,0,32,3);                      // 상단 몰딩 (밝게)
+    P(cx,"#6a4a30",0,3,32,1);
+    // 세로 패널 분할선
+    P(cx,"#5c3e28",10,4,1,23); P(cx,"#5c3e28",21,4,1,23);
+    P(cx,"#86603e",11,4,1,23); P(cx,"#86603e",22,4,1,23);  // 분할선 하이라이트
+    // 나뭇결
+    P(cx,"#8a6442",2,8,7,1); P(cx,"#8a6442",12,11,8,1); P(cx,"#8a6442",23,7,7,1);
+    P(cx,"#6e4c30",4,16,6,1); P(cx,"#6e4c30",14,19,7,1); P(cx,"#6e4c30",24,15,6,1);
+    // 굽도리 (베이스보드)
+    P(cx,"#4e351f",0,27,32,5);
+    P(cx,"#604429",0,27,32,1);
+    P(cx,"#3a2616",0,31,32,1);
+  });
+
+  // ── 복도 나무 교실문 (닫힌 채, 상단 채광창) ──
+  sprites[TILE_WOODDOOR] = makeSprite(cx => {
+    // 문틀
+    P(cx,"#5a3e28",0,0,32,32);
+    P(cx,"#6e4e32",0,0,32,2);
+    // 문짝
+    P(cx,"#946a44",3,2,26,29);
+    P(cx,"#a87c54",3,2,26,2);                      // 윗 하이라이트
+    P(cx,"#7a5636",26,3,3,28);                     // 오른쪽 음영
+    // 상단 채광창 (반투명 유리)
+    P(cx,"#c4ccd2",6,4,20,7);
+    P(cx,"#d8dee2",7,5,18,2);
+    P(cx,"#7a5636",15,4,2,7);                      // 창 가운데 살
+    P(cx,"#6e4c2e",6,11,20,1);
+    // 명패
+    P(cx,"#cfd6da",10,13,9,2); P(cx,"#9aa0a4",10,15,9,1);
+    // 하단 패널
+    P(cx,"#825a38",6,17,20,11); P(cx,"#946a44",7,18,18,9);
+    P(cx,"#6e4c2e",6,22,20,1);
+    // 손잡이
+    P(cx,"#d8d2c4",23,19,2,4); P(cx,"#9a9488",23,21,2,1);
+  });
+
+  // ── 잠긴 문 (사슬 + 자물쇠) ──
+  sprites[TILE_LOCKED_DOOR] = makeSprite(cx => {
+    P(cx,"#1e1a14",0,0,32,32);
+    P(cx,"#2c2620",2,0,28,32);
+    P(cx,"#3e362c",4,2,24,28);
+    // 문 패널
+    P(cx,"#4e4438",6,4,20,2);
+    P(cx,"#2c2418",6,8,20,2); P(cx,"#2c2418",6,18,20,2);
+    P(cx,"#342c20",8,10,16,6);
+    // 사슬 (X자 대각선)
+    cx.fillStyle = "#a0a0aa";
+    for (let i = 0; i < 11; i++) {
+      cx.fillRect(4 + i*2, 4 + i*2, 3, 2);
+      cx.fillRect(25 - i*2, 4 + i*2, 3, 2);
+    }
+    cx.fillStyle = "#7a7a84";
+    for (let i = 0; i < 11; i += 2) {
+      cx.fillRect(5 + i*2, 5 + i*2, 1, 1);
+      cx.fillRect(26 - i*2, 5 + i*2, 1, 1);
+    }
+    // 자물쇠
+    P(cx,"#666",13,17,6,4);                        // 고리
+    P(cx,"#444",14,18,4,3);
+    P(cx,"#909098",11,20,10,9); P(cx,"#b0b0b8",11,20,10,2);
+    P(cx,"#333",15,23,2,3); P(cx,"#222",14,25,4,1); // 열쇠 구멍
+  });
+
+  // ── 열린 출구 (창백한 달빛이 새어 들어옴) ──
+  sprites[TILE_ENTRANCE] = makeSprite(cx => {
+    P(cx,"#1c1820",0,0,32,32);
+    P(cx,"#3a3a4c",2,2,28,28);
+    P(cx,"#5a6078",5,4,22,26);
+    P(cx,"#8a94b0",8,6,16,24);
+    P(cx,"#c0cce0",11,8,10,22);
+    P(cx,"#e8f0fa",13,10,6,20);
+    // 빛줄기
+    P(cx,"rgba(200,216,240,0.40)",6,27,20,5);
+    P(cx,"rgba(200,216,240,0.20)",2,29,28,3);
+  });
+
+  // ── 거울 (금 간 거울 - 으스스) ──
+  sprites[TILE_MIRROR] = makeSprite(cx => {
+    cx.drawImage(sprites[TILE_WALL],0,0,32,32);
+    // 장식 프레임
+    P(cx,"#7a6a8a",2,2,28,26);
+    P(cx,"#9a8aaa",2,2,28,2); P(cx,"#5a4a6a",2,26,28,2);
+    P(cx,"#8a7a9a",2,2,2,26); P(cx,"#5a4a6a",28,2,2,26);
+    // 거울 면
+    P(cx,"#aab4c4",4,4,24,22);
+    P(cx,"#c8d4e4",5,5,22,8);
+    P(cx,"#8a94a8",5,16,22,9);
+    // 반사광 사선
+    P(cx,"#e8f0f8",8,6,2,16); P(cx,"#e8f0f8",12,6,1,16);
+    P(cx,"#dce8f0",18,8,2,12);
+    // 금 간 자국
+    P(cx,"#5a6478",20,9,1,2); P(cx,"#5a6478",21,11,1,2); P(cx,"#5a6478",22,13,1,2);
+    P(cx,"#5a6478",19,11,1,1); P(cx,"#5a6478",23,15,2,1); P(cx,"#5a6478",18,13,2,1);
+  });
+
+  // ── 벤치 (나무 벤치) ──
+  sprites[TILE_BENCH] = makeSprite(cx => {
+    cx.clearRect(0,0,32,32);
+    P(cx,"rgba(0,0,0,0.3)",0,26,32,3);             // 그림자
+    // 등받이 (잿빛 낡은 나무)
+    P(cx,"#544a40",0,4,32,5); P(cx,"#6a6054",0,4,32,1); P(cx,"#3c342c",0,8,32,1);
+    // 앉는 면 (널빤지 2개)
+    P(cx,"#5e5246",0,12,32,5); P(cx,"#746858",0,12,32,1); P(cx,"#443a30",0,16,32,1);
+    P(cx,"#564a3e",0,18,32,4); P(cx,"#6a5e50",0,18,32,1);
+    // 다리 (철제)
+    P(cx,"#3a3a44",3,22,3,7); P(cx,"#3a3a44",26,22,3,7);
+    P(cx,"#2a2a32",3,28,3,1); P(cx,"#2a2a32",26,28,3,1);
+  });
+
+  // ════════ 새 장식 타일 ════════
+
+  // ── 달빛 창문 ──
+  sprites[TILE_WINDOW] = makeSprite(cx => {
+    cx.drawImage(sprites[TILE_WALL],0,0,32,32);
+    // 창틀
+    P(cx,"#2a2a34",3,4,26,23);
+    P(cx,"#5a5a68",3,4,26,2);
+    P(cx,"#4a4a58",3,25,26,2);                     // 창턱
+    // 유리 - 밤하늘
+    P(cx,"#222a48",5,6,22,19);
+    P(cx,"#2c3a60",6,7,20,17);
+    // 달
+    P(cx,"#c8d8f0",18,9,5,5); P(cx,"#e8f0ff",19,10,3,3);
+    // 별
+    P(cx,"#aac0e0",8,9,1,1); P(cx,"#aac0e0",12,12,1,1); P(cx,"#8aa0c8",24,16,1,1);
+    // 달빛 구름
+    P(cx,"#46587e",7,15,8,1); P(cx,"#46587e",10,17,9,1); P(cx,"#3c4e74",8,20,6,1);
+    // 창살 (십자)
+    P(cx,"#1a1a26",15,6,2,19); P(cx,"#1a1a26",5,15,22,2);
+    // 창문 아래로 새어드는 달빛
+    P(cx,"rgba(140,180,240,0.20)",4,27,24,4);
+  });
+
+  // ── 책장 ──
+  sprites[TILE_BOOKSHELF] = makeSprite(cx => {
+    cx.drawImage(sprites[TILE_WALL],0,0,32,32);
+    // 책장 틀 (잿빛 낡은 나무)
+    P(cx,"#3e362c",1,1,30,30);
+    P(cx,"#544a3e",1,1,30,2);
+    P(cx,"#26201a",1,29,30,2);
+    // 칸 3단
+    for (let s = 0; s < 3; s++) {
+      const y = 4 + s * 9;
+      P(cx,"#221c14",3,y,26,8);                    // 칸 안쪽 (어둠)
+      P(cx,"#484034",3,y+8,26,1);                  // 선반
+      // 책들 (빛바랜 저채도 톤, 칸마다 다르게)
+      const books = [["#4e4450","#404a56","#4a4e48","#504c46","#46424e"],
+                     ["#42504e","#524642","#444652","#4c4a46","#4e4450"],
+                     ["#4a4a40","#3e4652","#524c48","#444e48","#4e4244"]][s];
+      let bx = 4;
+      books.forEach((col, i) => {
+        const bw = 4 + (i*7+s*3) % 3;              // 책 두께 변화
+        const bh = 6 + (i+s) % 2;
+        P(cx, col, bx, y+8-bh, bw, bh);
+        P(cx,"rgba(255,255,255,0.07)", bx, y+8-bh, 1, bh);  // 책등 하이라이트 (은은하게)
+        bx += bw + 1;
+      });
+    }
+  });
+
+  // ── 화분 (시들어가는 - 저채도) ──
+  sprites[TILE_PLANT] = makeSprite(cx => {
+    cx.clearRect(0,0,32,32);
+    P(cx,"rgba(0,0,0,0.3)",8,28,16,3);             // 그림자
+    // 화분 (잿빛 도기)
+    P(cx,"#564a48",10,20,12,9);
+    P(cx,"#665a56",10,20,12,2);
+    P(cx,"#443a38",11,27,10,2);
+    P(cx,"#4c403e",20,22,2,5);                     // 화분 음영
+    // 줄기
+    P(cx,"#3a443a",15,12,2,8);
+    P(cx,"#323a32",16,14,1,6);
+    // 잎 (먼지 앉은 흐릿한 초록)
+    P(cx,"#3e4e44",7,5,9,9); P(cx,"#48584c",9,7,5,5);
+    P(cx,"#3e4e44",16,3,10,10); P(cx,"#48584c",18,5,6,6);
+    P(cx,"#36443c",11,10,10,7);
+    P(cx,"#3a4a40",5,9,6,6); P(cx,"#3a4a40",22,10,6,6);
+    // 잎 하이라이트 (희미하게)
+    P(cx,"#525e54",10,7,2,2); P(cx,"#525e54",20,5,2,2); P(cx,"#525e54",14,11,2,1);
+    // 시든 잎 (말라붙은)
+    P(cx,"#56503e",24,14,3,2); P(cx,"#56503e",26,16,2,2); P(cx,"#4a4436",25,18,2,1);
+  });
+
+  // ── 게시판 (코르크판 + 메모) ──
+  sprites[TILE_BOARD] = makeSprite(cx => {
+    cx.drawImage(sprites[TILE_WALL],0,0,32,32);
+    // 틀 + 코르크 (빛바랜 갈색)
+    P(cx,"#48402e",2,3,28,24);
+    P(cx,"#665a46",2,3,28,1); P(cx,"#342c20",2,26,28,1);
+    P(cx,"#5c5240",3,4,26,22);
+    // 붙은 종이들 (오래되어 누렇게 바램)
+    P(cx,"#a8a298",5,6,8,11); P(cx,"#8e887e",5,16,8,1);
+    P(cx,"#9aa0a6",15,6,9,7);
+    P(cx,"#aaa094",16,15,10,9);
+    P(cx,"#a299a2",25,6,4,10);
+    // 글씨 줄 (희미하게 바랜 잉크)
+    P(cx,"#6e6a64",6,8,6,1); P(cx,"#6e6a64",6,11,5,1); P(cx,"#6e6a64",6,14,6,1);
+    P(cx,"#646e76",17,8,6,1); P(cx,"#646e76",17,10,5,1);
+    P(cx,"#7a7268",18,17,7,1); P(cx,"#7a7268",18,20,6,1);
+    // 압정 (녹슨)
+    P(cx,"#5e4a44",8,6,2,2); P(cx,"#48505e",18,6,2,2);
+    P(cx,"#4c544c",20,15,2,2); P(cx,"#5e5648",26,6,2,2);
+    // 찢어져 덜렁이는 종이 (한 귀퉁이)
+    P(cx,"#a09a8e",24,20,5,7); P(cx,"#867f74",24,26,5,1);
+  });
+
+  // ── 벽시계 (4시 44분 - 으스스) ──
+  sprites[TILE_CLOCK] = makeSprite(cx => {
+    cx.drawImage(sprites[TILE_WALL],0,0,32,32);
+    // 시계 외곽 (팔각형 느낌)
+    P(cx,"#3a2a1a",8,4,16,2); P(cx,"#3a2a1a",8,20,16,2);
+    P(cx,"#3a2a1a",6,6,2,14); P(cx,"#3a2a1a",24,6,2,14);
+    P(cx,"#3e362e",8,6,16,14);
+    // 시계 면 (누렇게 변색된 아이보리)
+    P(cx,"#b0aca0",9,6,14,14);
+    P(cx,"#a09c90",9,14,14,6);
+    // 눈금 (12, 3, 6, 9시)
+    P(cx,"#4a4a4e",15,7,2,2); P(cx,"#4a4a4e",15,17,2,2);
+    P(cx,"#4a4a4e",10,12,2,2); P(cx,"#4a4a4e",20,12,2,2);
+    // 바늘 - 4시 44분 (멈춘 시계)
+    P(cx,"#2e2e34",15,12,2,2);                     // 중심축
+    P(cx,"#2e2e34",17,14,2,1); P(cx,"#2e2e34",18,15,2,1);  // 시침 (4시 방향)
+    P(cx,"#46464c",14,14,1,1); P(cx,"#46464c",13,15,1,2); P(cx,"#46464c",12,17,1,2);  // 분침
+    // 시계 면 균열
+    P(cx,"#8a867c",11,8,1,3); P(cx,"#8a867c",12,11,1,2);
+    // 시계추 박스
+    P(cx,"#3c342a",13,22,6,7); P(cx,"#4a4034",13,22,6,1);
+    P(cx,"#221c14",14,23,4,5);
+    P(cx,"#6e6654",15,25,2,3); P(cx,"#7e7662",15,25,2,1);  // 빛바랜 추
+  });
+
+  // ── 교탁 ──
+  sprites[TILE_PODIUM] = makeSprite(cx => {
+    cx.clearRect(0,0,32,32);
+    P(cx,"rgba(0,0,0,0.3)",5,26,24,3);             // 그림자
+    // 교과서 (위에 올려진, 빛바랜 남색)
+    P(cx,"#3a4456",10,2,12,5); P(cx,"#4a5466",10,2,12,1); P(cx,"#9a968c",11,6,10,1);
+    // 상판 (잿빛 낡은 나무)
+    P(cx,"#564a3e",4,7,24,4); P(cx,"#6c6052",4,7,24,1); P(cx,"#3e342a",4,10,24,1);
+    // 몸체
+    P(cx,"#4a4036",6,11,20,16);
+    P(cx,"#585044",7,12,18,2);
+    P(cx,"#3a322a",6,25,20,2);
+    // 패널 장식 (교표 느낌, 빛바랜 놋쇠)
+    P(cx,"#3a322a",9,15,14,8); P(cx,"#4a4036",10,16,12,6);
+    P(cx,"#6e6654",14,18,4,3); P(cx,"#7e7662",15,19,2,1);
+  });
+
+  // ── 바닥에 흩어진 종이 (통과 가능) ──
+  sprites[TILE_PAPER] = makeSprite(cx => {
+    cx.clearRect(0,0,32,32);
+    // 종이 1 (누렇게 바랜 시험지)
+    P(cx,"#9a958a",6,7,10,13);
+    P(cx,"#a8a398",7,8,8,11);
+    P(cx,"#6e6a62",8,10,5,1); P(cx,"#6e6a62",8,13,6,1); P(cx,"#6e6a62",8,16,4,1);
+    // 종이 2
+    P(cx,"#857f74",18,15,9,11);
+    P(cx,"#938d82",19,16,7,9);
+    P(cx,"#6a665e",20,18,5,1); P(cx,"#6a665e",20,21,4,1);
+    // 구겨진 종이 뭉치
+    P(cx,"#938d82",22,5,5,4); P(cx,"#787268",23,6,2,2); P(cx,"#9f998e",24,5,2,1);
+  });
+
+  // ── 자판기 (전원 꺼진 채 먼지 쌓인) ──
+  sprites[TILE_VENDING] = makeSprite(cx => {
+    cx.clearRect(0,0,32,32);
+    P(cx,"rgba(0,0,0,0.35)",2,29,28,3);            // 그림자
+    // 몸체 (빛바랜 청회색)
+    P(cx,"#444250",2,1,28,29);
+    P(cx,"#54525e",2,1,28,3);
+    P(cx,"#322f3c",2,27,28,3);
+    P(cx,"#3a3844",27,4,3,23);                     // 옆면 음영
+    // 디스플레이 창 (어두운 유리)
+    P(cx,"#181c28",5,5,16,16);
+    P(cx,"#222634",6,6,14,14);
+    // 진열된 음료 (먼지 앉아 흐릿함)
+    const drinks = ["#6a6052","#4e5a64","#566052","#645662"];
+    for (let i = 0; i < 4; i++) {
+      P(cx, drinks[i], 7+i*3, 8, 2, 4);
+      P(cx,"rgba(255,255,255,0.10)", 7+i*3, 8, 1, 4);
+      P(cx, drinks[(i+2)%4], 7+i*3, 14, 2, 4);
+      P(cx,"rgba(255,255,255,0.10)", 7+i*3, 14, 1, 4);
+    }
+    // 버튼/동전 패널
+    P(cx,"#322e3c",23,5,5,16);
+    P(cx,"#5e5a52",24,6,3,2);                      // 꺼진 버튼
+    P(cx,"#787680",24,10,3,1);                     // 동전 투입구
+    P(cx,"#1e1c26",24,13,3,2);
+    P(cx,"#9b8aff",24,17,3,2);                     // 희미하게 깜빡이는 표시등 (몽환 보라)
+    P(cx,"rgba(155,138,255,0.18)",23,16,5,4);
+    // 배출구
+    P(cx,"#1c1822",6,23,14,4); P(cx,"#14101a",7,24,12,2);
+    // 유리에 쌓인 먼지
+    P(cx,"rgba(180,176,170,0.06)",6,6,14,14);
+  });
+
+  // ── 음수대 ──
+  sprites[TILE_FOUNTAIN] = makeSprite(cx => {
+    cx.drawImage(sprites[TILE_WALL],0,0,32,32);
+    // 본체 (녹슬고 변색된 스테인리스)
+    P(cx,"#707880",4,11,24,17);
+    P(cx,"#8a929a",4,11,24,2);
+    P(cx,"#585e66",4,26,24,2);
+    P(cx,"#646c74",26,13,2,13);
+    // 세면볼
+    P(cx,"#828a92",7,15,18,8);
+    P(cx,"#4e565e",9,17,14,5);
+    P(cx,"#424a52",10,18,12,3);
+    // 수도꼭지
+    P(cx,"#969ea4",14,8,4,5); P(cx,"#aab0b6",15,7,2,2);
+    P(cx,"#7e848a",13,9,1,3); P(cx,"#7e848a",18,9,1,3);
+    // 녹물 자국 + 고인 물
+    P(cx,"#5e5048",16,14,1,3); P(cx,"#5a7488",15,19,3,1);
+    P(cx,"#46586a",13,20,6,1);
+    P(cx,"#564a42",11,23,2,4);                     // 녹 흘러내린 자국
+  });
+
+  // ── 소화기 보관함 ──
+  sprites[TILE_EXTING] = makeSprite(cx => {
+    cx.drawImage(sprites[TILE_WALL],0,0,32,32);
+    // 보관함 (칠이 벗겨진 검붉은색)
+    P(cx,"#4e3438",6,4,20,24);
+    P(cx,"#5e4044",6,4,20,2);
+    P(cx,"#362226",6,26,20,2);
+    // 빛바랜 글씨 띠
+    P(cx,"#969089",8,5,16,1);
+    // 유리창
+    P(cx,"#343c4a",8,8,16,18);
+    P(cx,"#3e4654",9,9,14,16);
+    // 소화기 (먼지 쌓여 흐릿한 붉은색)
+    P(cx,"#6e424a",13,13,6,11); P(cx,"#7e525a",13,13,2,11);
+    P(cx,"#5a363e",18,13,1,11);
+    P(cx,"#222",14,11,4,2); P(cx,"#6a6a72",15,9,2,2);  // 핸들/노즐
+    P(cx,"#3a3a44",12,10,2,1);                      // 호스
+    // 라벨
+    P(cx,"#9a948c",14,17,4,3); P(cx,"#6e424a",15,18,2,1);
+    // 유리 반사
+    P(cx,"rgba(255,255,255,0.06)",9,9,4,16);
+  });
+
+  // ── 석상 (중앙홀 기념비 - 몽환적 발광 룬) ──
+  sprites[TILE_STATUE] = makeSprite(cx => {
+    cx.clearRect(0,0,32,32);
+    // 받침돌
+    P(cx,"#4a4a58",0,0,32,32);
+    P(cx,"#5a5a6a",1,1,30,30);
+    P(cx,"#6a6a7c",2,2,28,2);
+    P(cx,"#3e3e4c",2,28,28,2);
+    // 조각된 띠 무늬
+    P(cx,"#3a3a48",4,8,24,2); P(cx,"#3a3a48",4,22,24,2);
+    P(cx,"#52525e",6,12,20,8);
+    // 갈라진 금
+    P(cx,"#2a2a36",10,3,1,6); P(cx,"#2a2a36",11,9,1,5);
+    P(cx,"#2a2a36",22,18,1,8); P(cx,"#2a2a36",21,25,1,5);
+    // 이끼
+    P(cx,"#3a5a40",2,26,7,4); P(cx,"#4a6a4e",3,27,4,2);
+    P(cx,"#3a5a40",24,2,6,3); P(cx,"#4a6a4e",25,3,3,1);
+    // 발광하는 룬 문자 (몽환)
+    P(cx,"#9b8aff",14,13,4,6); P(cx,"#c8b8ff",15,15,2,2);
+    P(cx,"#8a7aee",13,15,1,2); P(cx,"#8a7aee",18,15,1,2);
+    P(cx,"rgba(155,138,255,0.25)",11,10,10,12);
+  });
+
+  // ── 낡은 카펫 (통과 가능, 짙은 남보라) ──
+  sprites[TILE_RUG] = makeSprite(cx => {
+    cx.clearRect(0,0,32,32);
+    // 카펫 본체 (어두운 남보라 - 몽환 톤)
+    P(cx,"#322c44",2,0,28,32);
+    P(cx,"#3a3450",4,0,24,32);
+    // 테두리 (바랜 은회색 자수)
+    P(cx,"#5a5668",2,0,2,32); P(cx,"#5a5668",28,0,2,32);
+    P(cx,"#4a4658",3,0,1,32); P(cx,"#4a4658",27,0,1,32);
+    // 다이아 무늬 (희미하게)
+    P(cx,"#44405c",14,5,4,4); P(cx,"#4e4a66",15,6,2,2);
+    P(cx,"#44405c",14,21,4,4); P(cx,"#4e4a66",15,22,2,2);
+    // 닳고 해진 자국
+    P(cx,"rgba(0,0,0,0.22)",8,12,8,3); P(cx,"rgba(0,0,0,0.22)",18,26,7,2);
+    P(cx,"rgba(140,140,160,0.06)",6,4,5,2);
+  });
+
+  // ── 안내데스크 ──
+  sprites[TILE_INFODESK] = makeSprite(cx => {
+    cx.clearRect(0,0,32,32);
+    P(cx,"rgba(0,0,0,0.3)",2,25,28,3);             // 그림자
+    // 안내 표지판 (불 꺼진 채 바램)
+    P(cx,"#2e3642",9,1,14,7); P(cx,"#3e4a58",10,2,12,5);
+    P(cx,"#8a949e",11,3,8,1); P(cx,"#8a949e",11,5,6,1);
+    P(cx,"#5a5a62",15,8,2,2);                      // 표지판 기둥
+    // 데스크 (잿빛 도는 어두운 나무)
+    P(cx,"#48403a",2,10,28,16);
+    P(cx,"#5e5650",2,10,28,3);
+    P(cx,"#6a625c",2,10,28,1);
+    P(cx,"#342e28",2,24,28,2);
+    // 패널
+    P(cx,"#3e3630",5,15,22,8);
+    P(cx,"#443c36",6,16,20,6);
+    // 데스크 위 - 종, 방명록 (먼지 쌓임)
+    P(cx,"#6e6654",24,8,3,2); P(cx,"#7e7662",25,7,1,1);   // 빛바랜 종
+    P(cx,"#9a948a",5,8,7,2); P(cx,"#6a665e",6,9,5,1);     // 펼쳐진 방명록
+  });
+
+  // ── 대리석 기둥 ──
+  sprites[TILE_PILLAR] = makeSprite(cx => {
+    cx.clearRect(0,0,32,32);
+    // 기둥 몸통
+    P(cx,"#5a5a6a",6,0,20,32);
+    P(cx,"#6e6e80",8,0,6,32);                      // 왼쪽 하이라이트
+    P(cx,"#484856",22,0,4,32);                     // 오른쪽 음영
+    // 세로 홈 (플루팅)
+    P(cx,"#4e4e5c",12,4,1,24); P(cx,"#4e4e5c",16,4,1,24); P(cx,"#4e4e5c",20,4,1,24);
+    // 기둥 머리
+    P(cx,"#6a6a7c",4,0,24,4); P(cx,"#7e7e90",4,0,24,1); P(cx,"#52525e",4,3,24,1);
+    // 기둥 받침
+    P(cx,"#6a6a7c",4,28,24,4); P(cx,"#52525e",4,31,24,1); P(cx,"#7a7a8c",4,28,24,1);
+    // 금 간 자국 + 담쟁이 (먼지 앉은 색)
+    P(cx,"#3e3e4c",10,14,1,5); P(cx,"#3e3e4c",11,18,1,3);
+    P(cx,"#3a4a40",22,20,3,8); P(cx,"#46584c",23,22,2,3); P(cx,"#3a4a40",20,26,3,4);
+  });
+
+  // ── 트로피 진열장 ──
+  sprites[TILE_TROPHY] = makeSprite(cx => {
+    cx.drawImage(sprites[TILE_WALL],0,0,32,32);
+    // 진열장 틀
+    P(cx,"#3a2c1c",2,2,28,28);
+    P(cx,"#5a4630",2,2,28,2); P(cx,"#281c10",2,28,28,2);
+    // 유리 안쪽
+    P(cx,"#28324a",4,5,24,23);
+    P(cx,"#323e58",5,6,22,21);
+    // 선반
+    P(cx,"#4a3a26",4,15,24,2);
+    // 윗칸 - 트로피들 (광택을 잃고 변색됨)
+    P(cx,"#8a7a52",8,8,4,5); P(cx,"#9a8a62",8,8,4,1);     // 변색된 금 트로피
+    P(cx,"#6e6244",7,9,1,2); P(cx,"#6e6244",12,9,1,2);    // 손잡이
+    P(cx,"#5e5440",9,13,2,2);                              // 받침
+    P(cx,"#7e848c",18,9,4,4); P(cx,"#929aa2",18,9,4,1);   // 흐려진 은 트로피
+    P(cx,"#6a7078",19,13,2,2);
+    // 아랫칸 - 상장 + 메달 (누렇게 바램)
+    P(cx,"#a29a86",7,18,7,8); P(cx,"#7a7264",8,20,5,1); P(cx,"#7a7264",8,22,4,1);
+    P(cx,"#8a7a52",9,24,3,1);                              // 바랜 직인
+    P(cx,"#5e4248",20,18,2,5);                             // 색 빠진 메달 리본
+    P(cx,"#8a7a52",19,23,4,4); P(cx,"#9a8a62",20,24,2,2); // 변색된 메달
+    // 유리 반사 + 먼지
+    P(cx,"rgba(255,255,255,0.05)",6,6,6,21);
+    P(cx,"rgba(160,156,150,0.06)",5,6,22,21);
+  });
+
+  // ── 물웅덩이 (복도 바닥, 통과 가능) ──
+  sprites[TILE_PUDDLE] = makeSprite(cx => {
+    cx.clearRect(0,0,32,32);
+    // 어두운 물 (불규칙한 모양)
+    P(cx,"#1a2c38",6,8,20,16);
+    P(cx,"#1a2c38",4,12,4,8); P(cx,"#1a2c38",24,10,5,10);
+    P(cx,"#243c4a",8,10,16,12);
+    P(cx,"#243c4a",6,13,4,6);
+    // 수면 반사 (희미한 달빛)
+    P(cx,"#46687e",12,12,6,1); P(cx,"#46687e",10,16,4,1);
+    P(cx,"#587a90",14,13,3,1); P(cx,"#3c5a70",18,19,5,1);
+    // 물결
+    P(cx,"#2e4c5c",9,21,10,1); P(cx,"#2e4c5c",16,11,6,1);
+  });
+
+  // ════════ 구형 타일 (현재 스테이지 미사용 - 2배 확대) ════════
+  sprites[TILE_GRASS] = makeLegacySprite((cx,T) => {
+    cx.fillStyle = "#2c3820"; cx.fillRect(0,0,T,T);
+    cx.fillStyle = "#3a4828";
+    [[2,3],[7,1],[11,5],[5,9],[13,11],[3,13],[9,14]].forEach(([x,y])=>cx.fillRect(x,y,2,1));
+    cx.fillStyle = "#1f2818"; cx.fillRect(0,15,1,1); cx.fillRect(14,2,1,1);
+  });
+  sprites[TILE_SAND] = makeLegacySprite((cx,T) => {
+    cx.fillStyle = "#c8a878"; cx.fillRect(0,0,T,T);
+    cx.fillStyle = "#a08858";
+    [[2,4],[8,10],[13,2],[5,13]].forEach(([x,y])=>cx.fillRect(x,y,2,1));
+    cx.fillStyle = "#d8b888";
+    [[5,8],[11,13],[3,1]].forEach(([x,y])=>cx.fillRect(x,y,1,1));
+  });
+  sprites[TILE_BATH] = makeLegacySprite((cx,T) => {
+    cx.fillStyle = "#6a7080"; cx.fillRect(0,0,T,T);
+    cx.fillStyle = "#7a8090";
+    cx.fillRect(0,0,T,1); cx.fillRect(0,0,1,T);
+    cx.fillRect(8,0,1,T); cx.fillRect(0,8,T,1);
+    cx.fillStyle = "#5a606a"; cx.fillRect(7,0,1,T);
+  });
+  sprites[TILE_TOILET] = makeLegacySprite((cx,T) => {
+    cx.fillStyle = "#6a7080"; cx.fillRect(0,0,T,T);
+    cx.fillStyle = "#eeeeee"; cx.fillRect(4,3,8,10);
+    cx.fillStyle = "#cccccc"; cx.fillRect(5,4,6,8);
+    cx.fillStyle = "#888"; cx.fillRect(6,5,4,6);
+  });
+  sprites[TILE_SINK] = makeLegacySprite((cx,T) => {
+    cx.fillStyle = "#6a7080"; cx.fillRect(0,0,T,T);
+    cx.fillStyle = "#dddddd"; cx.fillRect(2,5,T-4,8);
+    cx.fillStyle = "#888"; cx.fillRect(5,8,6,2);
+    cx.fillStyle = "#666"; cx.fillRect(7,3,2,3);
+  });
+  sprites[TILE_STAIRS_UP] = makeLegacySprite((cx,T) => {
+    cx.fillStyle = "#4a4a55"; cx.fillRect(0,0,T,T);
+    cx.fillStyle = "#2a2a32";
+    for (let i = 0; i < 5; i++) cx.fillRect(0,2+i*3,T,1);
+    cx.fillStyle = "#7af0a0";
+    cx.fillRect(7,4,2,7); cx.fillRect(5,6,6,1); cx.fillRect(6,5,4,1);
+  });
+  sprites[TILE_STAIRS_DOWN] = makeLegacySprite((cx,T) => {
+    cx.fillStyle = "#4a4a55"; cx.fillRect(0,0,T,T);
+    cx.fillStyle = "#2a2a32";
+    for (let i = 0; i < 5; i++) cx.fillRect(0,2+i*3,T,1);
+    cx.fillStyle = "#ff9070";
+    cx.fillRect(7,5,2,7); cx.fillRect(5,10,6,1); cx.fillRect(6,11,4,1);
+  });
+  sprites[TILE_PULLUP] = makeLegacySprite((cx,T) => {
+    cx.fillStyle = "#2c3820"; cx.fillRect(0,0,T,T);
+    cx.fillStyle = "#778899"; cx.fillRect(3,1,2,T-2); cx.fillRect(T-5,1,2,T-2);
+    cx.fillStyle = "#aabbcc"; cx.fillRect(3,7,T-6,2);
+  });
+  sprites[TILE_FENCE] = makeLegacySprite((cx,T) => {
+    cx.fillStyle = "#2c3820"; cx.fillRect(0,0,T,T);
+    cx.fillStyle = "#4a4a55"; cx.fillRect(7,0,2,T);
+    cx.fillRect(0,4,T,1); cx.fillRect(0,11,T,1);
+    cx.fillStyle = "#6a6a75"; cx.fillRect(7,0,1,T);
+  });
+  sprites[TILE_TRACK] = makeLegacySprite((cx,T) => {
+    cx.fillStyle = "#6b3a2a"; cx.fillRect(0,0,T,T);
+    cx.fillStyle = "#8b4a3a"; cx.fillRect(0,2,T,1); cx.fillRect(0,T-3,T,1);
+    cx.fillStyle = "#4b2a1a"; cx.fillRect(0,0,T,1); cx.fillRect(0,T-1,T,1);
+  });
+  sprites[TILE_GOAL] = makeLegacySprite((cx,T) => {
+    cx.fillStyle = "#2c3820"; cx.fillRect(0,0,T,T);
+    cx.fillStyle = "#cccccc"; cx.fillRect(0,0,T,2);
+    cx.fillRect(0,0,2,9); cx.fillRect(T-2,0,2,9);
+    cx.fillStyle = "#888"; cx.fillRect(0,2,T,1);
+  });
+
+  // 플레이어 4방향 스프라이트
+  playerSprites.up = makeSprite(cx => drawPlayer(cx, 'up'));
+  playerSprites.down = makeSprite(cx => drawPlayer(cx, 'down'));
+  playerSprites.left = makeSprite(cx => drawPlayer(cx, 'left'));
+  playerSprites.right = makeSprite(cx => drawPlayer(cx, 'right'));
+
+  // 환영 스프라이트 (긴 머리 소녀 유령)
+  phantomSprite = makeSprite(cx => {
+    cx.clearRect(0,0,32,32);
+    // 몸 (반투명)
+    P(cx,"rgba(255,128,160,0.85)",10,3,12,9);      // 머리
+    P(cx,"rgba(255,128,160,0.75)",8,12,16,12);     // 몸통
+    // 너덜거리는 옷자락
+    P(cx,"rgba(255,128,160,0.55)",8,24,3,5);
+    P(cx,"rgba(255,128,160,0.50)",13,24,3,4);
+    P(cx,"rgba(255,128,160,0.55)",18,24,3,6);
+    P(cx,"rgba(255,128,160,0.45)",22,24,2,3);
+    // 긴 검은 머리카락
+    P(cx,"rgba(40,20,40,0.75)",8,2,16,4);
+    P(cx,"rgba(40,20,40,0.65)",7,4,3,18);
+    P(cx,"rgba(40,20,40,0.65)",22,4,3,18);
+    P(cx,"rgba(40,20,40,0.5)",6,10,2,8); P(cx,"rgba(40,20,40,0.5)",24,10,2,8);
+    // 검은 눈 (퀭한)
+    P(cx,"#000",13,7,2,3); P(cx,"#000",18,7,2,3);
+    // 입 (검은 구멍)
+    P(cx,"#1a0010",15,11,3,2);
+  });
+}
+
+function drawLocker(cx, glow) {
+  // 몸체 (차분한 청회색 - 단서 사물함도 같은 톤, 빛만 새어나옴)
+  P(cx,"#3c4a58",0,0,32,32);
+  P(cx,"#4c5a68",0,0,32,3);                         // 윗면
+  P(cx,"#141e28",0,29,32,3);                        // 바닥 그림자
+  // 두 칸 분리선
+  P(cx,"#1e2a36",15,3,2,26);
+  // 각 문
+  for (const ox of [1, 17]) {
+    P(cx,"#44525e",ox+1,4,12,24);
+    P(cx,"#2c3a46",ox+12,4,1,24);                   // 오른쪽 음영
+    P(cx,"#4e5c6a",ox+1,4,12,1);                    // 윗면 하이라이트
+    // 통풍구 (위쪽 3줄)
+    for (let i = 0; i < 3; i++) P(cx,"#1a242e",ox+3,7+i*3,8,1);
+    // 이름표 (빛바램)
+    P(cx,"#9a988c",ox+3,17,8,4); P(cx,"#6a685e",ox+3,20,8,1);
+    P(cx,"#54524a",ox+4,18,5,1);                    // 이름 글씨
+    // 손잡이
+    P(cx,"#8a929a",ox+10,23,2,4); P(cx,"#5e666e",ox+11,24,1,2);
+  }
+  if (glow) {
+    // 문틈으로 은은하게 새어나오는 빛 (단서 표시)
+    P(cx,"rgba(232,210,160,0.20)",4,6,24,22);
+    P(cx,"rgba(232,210,160,0.45)",14,8,4,20);       // 가운데 문틈
+    P(cx,"#e0cc96",15,10,2,16);
+    P(cx,"#f0e0b4",15,14,2,6);
+  }
+}
+
+const playerSprites = {};
+let phantomSprite;
+
+// 성능: 매 프레임 그라데이션 생성을 피하기 위한 캐시 + 미리 만든 오브 글로우 스프라이트
+let fogCache = null;
+const orbSprites = [];
+(function buildOrbSprites() {
+  const cols = ["rgba(180,140,240,", "rgba(140,200,240,", "rgba(220,160,200,"];
+  const peak = [0.35, 0.32, 0.30];
+  cols.forEach((c, i) => {
+    const r = 28, cv = document.createElement("canvas");
+    cv.width = cv.height = r * 2;
+    const cx = cv.getContext("2d");
+    const g = cx.createRadialGradient(r, r, 0, r, r, r);
+    g.addColorStop(0, c + peak[i] + ")");
+    g.addColorStop(1, c + "0)");
+    cx.fillStyle = g; cx.fillRect(0, 0, r * 2, r * 2);
+    orbSprites.push(cv);
+  });
+})();
+
+function drawPlayer(cx, dir) {
+  cx.clearRect(0,0,TILE,TILE);
+  // 그림자
+  P(cx,"rgba(0,0,0,0.40)",8,28,16,3);
+  // 다리 (교복 바지)
+  P(cx,"#222a3a",10,23,5,6); P(cx,"#222a3a",17,23,5,6);
+  P(cx,"#1a2030",10,27,5,1); P(cx,"#1a2030",17,27,5,1);
+  // 신발
+  P(cx,"#3a3a44",9,28,6,2); P(cx,"#3a3a44",17,28,6,2);
+  P(cx,"#52525e",9,28,6,1); P(cx,"#52525e",17,28,6,1);
+  // 몸통 (교복 자켓)
+  P(cx,"#3a4a6a",8,14,16,10);
+  P(cx,"#4a5a7a",8,14,16,2);
+  P(cx,"#2a3a5a",8,22,16,2);
+  P(cx,"#32425e",22,15,2,9);                       // 오른쪽 음영
+  // 팔
+  P(cx,"#3a4a6a",5,15,3,8); P(cx,"#3a4a6a",24,15,3,8);
+  P(cx,"#2e3e5a",5,21,3,2); P(cx,"#2e3e5a",24,21,3,2);  // 소매
+  P(cx,"#e8c8a0",5,23,3,2); P(cx,"#e8c8a0",24,23,3,2);  // 손
+  if (dir !== 'up') {
+    // 셔츠 카라 + 넥타이 (정면/옆모습, 차분한 색)
+    P(cx,"#c8c8d2",13,14,6,3);
+    P(cx,"#5a4452",15,15,2,7);
+    P(cx,"#6a5462",15,15,2,1);
+    // 자켓 단추
+    P(cx,"#8a8474",15,22,1,1);
+  }
+  // 머리
+  P(cx,"#e8c8a0",9,4,14,11);
+  P(cx,"#d8b890",21,6,2,9);                        // 얼굴 음영
+  // 머리카락
+  if (dir === 'up') {
+    // 뒤통수 - 머리카락이 다 보임
+    P(cx,"#3a2418",8,2,16,12);
+    P(cx,"#4a3020",9,3,5,2);                       // 하이라이트
+    P(cx,"#2a1810",8,12,16,2);
+  } else {
+    P(cx,"#3a2418",8,2,16,5);
+    P(cx,"#4a3020",10,3,6,1);                      // 하이라이트
+    P(cx,"#3a2418",8,5,3,6); P(cx,"#3a2418",21,5,3,6);  // 옆머리
+    // 앞머리 삐죽
+    P(cx,"#3a2418",12,6,2,2); P(cx,"#3a2418",17,6,2,2);
+  }
+  // 눈/표정 (방향별)
+  if (dir === 'down') {
+    P(cx,"#2a2a3a",12,9,2,3); P(cx,"#2a2a3a",18,9,2,3);
+    P(cx,"#fff",12,9,1,1); P(cx,"#fff",18,9,1,1);  // 눈동자 반짝임
+    P(cx,"#c08070",15,13,2,1);                     // 입
+  } else if (dir === 'left') {
+    P(cx,"#2a2a3a",10,9,2,3); P(cx,"#2a2a3a",16,9,2,3);
+    P(cx,"#fff",10,9,1,1); P(cx,"#fff",16,9,1,1);
+  } else if (dir === 'right') {
+    P(cx,"#2a2a3a",14,9,2,3); P(cx,"#2a2a3a",20,9,2,3);
+    P(cx,"#fff",15,9,1,1); P(cx,"#fff",21,9,1,1);
+  }
+}
+
+// ──────────────────────────────────────────
+// 맵 생성
+// ──────────────────────────────────────────
+function makeEmptyMap(fill) {
+  const m = [];
+  for (let r = 0; r < MAP_H; r++) {
+    const row = [];
+    for (let c = 0; c < MAP_W; c++) row.push(fill);
+    m.push(row);
+  }
+  return m;
+}
+function fillRect(m, x1, y1, x2, y2, tile) {
+  for (let r = y1; r <= y2; r++) for (let c = x1; c <= x2; c++)
+    if (r >= 0 && r < MAP_H && c >= 0 && c < MAP_W) m[r][c] = tile;
+}
+function rectBorder(m, x1, y1, x2, y2, tile) {
+  for (let c = x1; c <= x2; c++) { m[y1][c] = tile; m[y2][c] = tile; }
+  for (let r = y1; r <= y2; r++) { m[r][x1] = tile; m[r][x2] = tile; }
+}
+
+// ?ㅽ뀒?댁?留덈떎 ?ㅻⅨ 吏??쓣 鍮뚮뱶. 異쒓뎄??泥섏쓬???좉꺼 ?덇퀬,
+// ?댁뇿 議곌컖??紐⑤몢 紐⑥쑝硫?unlockExit() 媛 ?대떦 ?좉툑 臾몄쓣 ??댁???
+let stageExitDoors = [];
+
+function buildMaps() {
+  map1 = makeEmptyMap(TILE_VOID);
+  map2 = makeEmptyMap(TILE_VOID);
+  stageExitDoors = [];
+  if (state.stage === 1) buildStage1Classroom();
+  else if (state.stage === 2) buildStage2Corridor();
+  else buildStage3Central();
+}
+
+// Stage 1: 갇힌 교실
+function buildStage1Classroom() {
+  fillRect(map1, 18, 10, 31, 22, TILE_FLOOR);
+  rectBorder(map1, 18, 10, 31, 22, TILE_WALL);
+  // 북쪽 벽: 게시판 + 칠판 + 시계
+  map1[11][19] = TILE_BOARD;
+  for (let c = 20; c <= 29; c++) map1[11][c] = TILE_CHALK;
+  map1[11][30] = TILE_CLOCK;
+  // 양쪽 벽: 달빛 창문
+  [13, 15, 17, 20].forEach(r => { map1[r][18] = TILE_WINDOW; });
+  [14, 17, 20].forEach(r => { map1[r][31] = TILE_WINDOW; });
+  // 책상 - 줄 맞춰 정렬된 4열(가운데 통로), 모두 칠판을 향함
+  [21, 23, 27, 29].forEach(c => {
+    [14, 16, 18].forEach(r => { map1[r][c] = TILE_DESK; });
+  });
+  // 서쪽: 빛나는 사물함 (단서)
+  map1[13][19] = TILE_LOCKER_GLOW;
+  map1[16][19] = TILE_LOCKER_GLOW;
+  map1[19][19] = TILE_LOCKER_GLOW;
+  map1[21][19] = TILE_PLANT;
+  // 동쪽: 책장 + 사물함 + 화분
+  map1[13][30] = TILE_BOOKSHELF;
+  map1[14][30] = TILE_LOCKER;
+  map1[16][30] = TILE_BOOKSHELF;
+  map1[19][30] = TILE_LOCKER;
+  map1[21][30] = TILE_PLANT;
+  // 교탁
+  map1[12][24] = TILE_PODIUM;
+  // 바닥: 흩어진 시험지
+  map1[15][22] = TILE_PAPER;
+  map1[17][26] = TILE_PAPER;
+  map1[20][28] = TILE_PAPER;
+  map1[20][21] = TILE_PAPER;
+  // 출구 (잠긴 문)
+  map1[22][24] = TILE_LOCKED_DOOR;
+  map1[22][25] = TILE_LOCKED_DOOR;
+  stageExitDoors.push({ tx: 24, ty: 22 }, { tx: 25, ty: 22 });
+
+  registerTrigger(1, 19, 13, "locker", "녹슨 사물함");
+  registerTrigger(1, 19, 16, "locker", "낡은 사물함");
+  registerTrigger(1, 19, 19, "locker", "삐걱대는 사물함");
+  registerTrigger(1, 24, 11, "chalk", "칠판");
+  registerTrigger(1, 23, 14, "desk", "수상한 책상");
+  registerTrigger(1, 27, 16, "desk", "낙서된 책상");
+  registerTrigger(1, 24, 12, "desk", "교탁");
+}
+
+// Stage 2: 텅 빈 복도 (레퍼런스 - 원목 패널 벽 + 나무 교실문 + 채광창)
+function buildStage2Corridor() {
+  fillRect(map1, 5, 12, 44, 17, TILE_FLOOR);
+  rectBorder(map1, 5, 12, 44, 17, TILE_WALL);
+
+  // 북쪽 채광창 벽 (위쪽으로 빛이 들어오는 큰 창문 줄)
+  for (let c = 6; c <= 43; c++) map1[12][c] = TILE_WINDOW;
+
+  // 북쪽 안쪽 벽: 원목 패널 + 나무 교실문 + 단서 사물함
+  for (let c = 6; c <= 43; c++) map1[13][c] = TILE_WOODWALL;
+  [11, 18, 26, 35].forEach(c => { map1[13][c] = TILE_WOODDOOR; });   // 교실 문
+  [8, 14, 22, 30, 38].forEach(c => { map1[13][c] = TILE_LOCKER_GLOW; }); // 단서 사물함
+  map1[13][16] = TILE_BOARD;
+  map1[13][28] = TILE_CLOCK;
+  map1[13][40] = TILE_BOARD;
+
+  // 남쪽 안쪽 벽: 원목 패널 + 나무 교실문 + 단서 사물함
+  for (let c = 6; c <= 43; c++) map1[16][c] = TILE_WOODWALL;
+  [12, 24, 32].forEach(c => { map1[16][c] = TILE_WOODDOOR; });
+  [9, 20, 28, 36].forEach(c => { map1[16][c] = TILE_LOCKER_GLOW; });
+  map1[16][16] = TILE_EXTING;
+  map1[16][40] = TILE_TROPHY;
+  // 남쪽 바깥 테두리도 원목 벽
+  for (let c = 6; c <= 43; c++) map1[17][c] = TILE_WOODWALL;
+
+  // 바닥 소품 (모두 통과 가능)
+  map1[15][11] = TILE_PAPER;
+  map1[14][19] = TILE_PUDDLE;
+  map1[15][27] = TILE_PAPER;
+  map1[14][35] = TILE_PUDDLE;
+  map1[15][39] = TILE_PAPER;
+
+  // 서쪽 입구 / 동쪽 출구 (잠긴 계단)
+  map1[14][5] = TILE_DOOR;
+  map1[14][43] = TILE_LOCKED_DOOR;
+  map1[15][43] = TILE_LOCKED_DOOR;
+  stageExitDoors.push({ tx: 43, ty: 14 }, { tx: 43, ty: 15 });
+
+  registerTrigger(1, 8, 13, "locker", "북쪽 사물함");
+  registerTrigger(1, 14, 13, "locker", "낙서된 사물함");
+  registerTrigger(1, 22, 13, "locker", "흔들리는 사물함");
+  registerTrigger(1, 30, 13, "locker", "녹슨 사물함");
+  registerTrigger(1, 38, 13, "locker", "찌그러진 사물함");
+  registerTrigger(1, 9, 16, "locker", "남쪽 사물함");
+  registerTrigger(1, 20, 16, "locker", "잠긴 사물함");
+  registerTrigger(1, 28, 16, "locker", "삐걱대는 사물함");
+  registerTrigger(1, 36, 16, "locker", "구식 사물함");
+}
+
+// Stage 3: 1층 중앙홀 - 기념 석상을 중심으로 한 전시·기념홀 (박물관식 회랑)
+function buildStage3Central() {
+  // 대리석 체크무늬 바닥
+  fillRect(map1, 12, 10, 37, 22, TILE_MARBLE);
+  rectBorder(map1, 12, 10, 37, 22, TILE_WALL);
+
+  // 중심축(24.5) 기준 좌우대칭 헬퍼
+  const mir = c => 49 - c;
+  const sym = (r, c, tile) => { map1[r][c] = tile; map1[r][mir(c)] = tile; };
+
+  // ── 북쪽 벽: 달빛 창문 (좌우대칭) ──
+  [14, 16, 19].forEach(c => { map1[10][c] = TILE_WINDOW; map1[10][mir(c)] = TILE_WINDOW; });
+
+  // ── 북쪽 전시 벽(row 11): 트로피·기념패 진열장 + 거울 + 안내데스크 + 중앙 안내 게시판 ──
+  for (let c = 22; c <= 27; c++) map1[11][c] = TILE_CHALK;   // 중앙 안내 게시판
+  sym(11, 13, TILE_MIRROR);
+  sym(11, 15, TILE_TROPHY);
+  sym(11, 17, TILE_TROPHY);
+  sym(11, 19, TILE_INFODESK);
+  sym(11, 20, TILE_TROPHY);
+  sym(11, 21, TILE_TROPHY);
+
+  // ── 양쪽 벽을 따라 늘어선 관람 벤치 + 끝에 화분 (전시 회랑) ──
+  [13, 14, 16, 17, 19].forEach(r => sym(r, 14, TILE_BENCH));
+  sym(12, 14, TILE_PLANT);
+  sym(20, 14, TILE_PLANT);
+
+  // ── 중앙 기념 석상 단(壇): 카펫 위 2x2 석상, 네 모서리에 대리석 기둥 ──
+  fillRect(map1, 23, 13, 26, 17, TILE_RUG);   // 카펫 단 (cols 23-26, rows 13-17)
+  map1[15][24] = TILE_STATUE; map1[15][25] = TILE_STATUE;
+  map1[16][24] = TILE_STATUE; map1[16][25] = TILE_STATUE;
+  sym(13, 22, TILE_PILLAR); sym(18, 22, TILE_PILLAR);   // 단 네 모서리 기둥 (22·27)
+  sym(13, 20, TILE_PLANT);                              // 단 옆 화분 (20·29)
+
+  // ── 기념 석상 → 정문 붉은 카펫 통로 (통과 가능) ──
+  for (let r = 18; r <= 21; r++) { map1[r][24] = TILE_RUG; map1[r][25] = TILE_RUG; }
+  map1[21][23] = TILE_RUG; map1[21][26] = TILE_RUG;   // 정문 앞 환영 매트
+
+  // ── 바닥에 흩어진 종이 (통과 가능) ──
+  map1[12][20] = TILE_PAPER;
+  map1[19][29] = TILE_PAPER;
+
+  // ── 정문 (잠김) ──
+  for (let c = 23; c <= 26; c++) map1[22][c] = TILE_LOCKED_DOOR;
+  stageExitDoors.push(
+    { tx: 23, ty: 22 }, { tx: 24, ty: 22 },
+    { tx: 25, ty: 22 }, { tx: 26, ty: 22 }
+  );
+
+  // ── 단서 트리거 ──
+  registerTrigger(1, 24, 11, "chalk", "안내 게시판");
+  registerTrigger(1, 13, 11, "mirror", "서쪽 거울");
+  registerTrigger(1, 36, 11, "mirror", "동쪽 거울");
+  registerTrigger(1, 15, 11, "trophy", "서쪽 트로피장");
+  registerTrigger(1, 34, 11, "trophy", "동쪽 트로피장");
+  registerTrigger(1, 20, 11, "trophy", "우승기 진열장");
+  registerTrigger(1, 29, 11, "trophy", "기념패 진열장");
+  registerTrigger(1, 24, 16, "statue", "기념 석상");
+  registerTrigger(1, 14, 16, "bench", "서쪽 관람석");
+  registerTrigger(1, 35, 16, "bench", "동쪽 관람석");
+}
+
+function registerTrigger(floor, tx, ty, type, label) {
+  triggers.push({ floor, tx, ty, type, label, used:false });
+}
+
+// 교실 5종 구조 변형
+function buildClassroomVariant(m, yOffset, cStart, variant) {
+  // variant 0: 표준 줄 책상 (4개)
+  // variant 1: 원형 배치 (벽 따라)
+  // variant 2: 흐트러진 배치 (혼돈)
+  // variant 3: 미술실 (책상 + 칠판 이젤)
+  // variant 4: 과학실 (긴 실험대)
+  const r2 = yOffset;
+  if (variant === 0) {
+    // 줄 - 2x2
+    for (let r = 4; r <= 6; r += 2)
+      for (let c = cStart+2; c <= cStart+6; c += 2)
+        m[r+r2][c] = TILE_DESK;
+  } else if (variant === 1) {
+    // 원형 (가장자리)
+    m[3+r2][cStart+2] = TILE_DESK; m[3+r2][cStart+6] = TILE_DESK;
+    m[7+r2][cStart+2] = TILE_DESK; m[7+r2][cStart+6] = TILE_DESK;
+    m[5+r2][cStart+1] = TILE_DESK; m[5+r2][cStart+7] = TILE_DESK;
+  } else if (variant === 2) {
+    // 혼돈 - 흩어진 배치
+    m[3+r2][cStart+4] = TILE_DESK;
+    m[4+r2][cStart+2] = TILE_DESK;
+    m[5+r2][cStart+5] = TILE_DESK;
+    m[6+r2][cStart+3] = TILE_DESK;
+    m[7+r2][cStart+6] = TILE_DESK;
+    m[7+r2][cStart+1] = TILE_DESK;
+  } else if (variant === 3) {
+    // 미술실 - 이젤(칠판)이 가운데에
+    m[4+r2][cStart+3] = TILE_CHALK;
+    m[4+r2][cStart+5] = TILE_CHALK;
+    m[6+r2][cStart+2] = TILE_CHALK;
+    m[6+r2][cStart+6] = TILE_CHALK;
+    m[5+r2][cStart+4] = TILE_DESK;
+  } else if (variant === 4) {
+    // 과학실 - 긴 실험대 2줄
+    for (let c = cStart+2; c <= cStart+6; c++) m[4+r2][c] = TILE_DESK;
+    for (let c = cStart+2; c <= cStart+6; c++) m[7+r2][c] = TILE_DESK;
+  }
+}
+
+function currentMap() { return state.currentFloor === 1 ? map1 : map2; }
+
+// ──────────────────────────────────────────
+// 입력
+// ──────────────────────────────────────────
+const keys = {};
+window.addEventListener("keydown", e => {
+  keys[e.key.toLowerCase()] = true;
+  if (e.key.toLowerCase() === "e") tryInteract();
+});
+window.addEventListener("keyup", e => { keys[e.key.toLowerCase()] = false; });
+
+const gamepadState = { connected:false, prevButtons:{} };
+window.addEventListener("gamepadconnected", e => {
+  gamepadState.connected = true;
+  const el = document.getElementById("gamepad-status");
+  el.textContent = "🎮 " + e.gamepad.id; el.classList.add("on");
+});
+window.addEventListener("gamepaddisconnected", () => {
+  gamepadState.connected = false;
+  const el = document.getElementById("gamepad-status");
+  el.textContent = "게임패드 미연결"; el.classList.remove("on");
+});
+
+function pollGamepad() {
+  const pads = navigator.getGamepads ? navigator.getGamepads() : [];
+  let lx=0, ly=0, interact=false;
+  const dz = 0.18;
+  for (const p of pads) {
+    if (!p) continue;
+    lx += Math.abs(p.axes[0]||0) < dz ? 0 : p.axes[0];
+    ly += Math.abs(p.axes[1]||0) < dz ? 0 : p.axes[1];
+    for (const i of [0,1,2,3,5,7]) {
+      const b = p.buttons[i]; if (!b) continue;
+      const key = `${p.index}_${i}`;
+      const was = gamepadState.prevButtons[key];
+      if (b.pressed && !was) interact = true;
+      gamepadState.prevButtons[key] = b.pressed;
+    }
+  }
+  return { lx, ly, interact };
+}
+
+// ──────────────────────────────────────────
+// 충돌 + 이동
+// ──────────────────────────────────────────
+function isSolidAt(map, wx, wy) {
+  const tx = Math.floor(wx / TILE), ty = Math.floor(wy / TILE);
+  if (tx < 0 || tx >= MAP_W || ty < 0 || ty >= MAP_H) return true;
+  return SOLID.has(map[ty][tx]);
+}
+
+function tryMove(dx, dy) {
+  const m = currentMap();
+  const r = player.size;
+  // X
+  const newX = player.x + dx;
+  if (!isSolidAt(m, newX - r, player.y - r) &&
+      !isSolidAt(m, newX + r, player.y - r) &&
+      !isSolidAt(m, newX - r, player.y + r) &&
+      !isSolidAt(m, newX + r, player.y + r)) {
+    player.x = newX;
+  }
+  // Y
+  const newY = player.y + dy;
+  if (!isSolidAt(m, player.x - r, newY - r) &&
+      !isSolidAt(m, player.x + r, newY - r) &&
+      !isSolidAt(m, player.x - r, newY + r) &&
+      !isSolidAt(m, player.x + r, newY + r)) {
+    player.y = newY;
+  }
+  // 운동장 / 화장실 입구의 ENTRANCE / DOOR 는 통과 (solid 아님)
+  // 계단 자동 트리거
+  checkStairAuto();
+}
+
+function checkStairAuto() {
+  const tx = Math.floor(player.x / TILE), ty = Math.floor(player.y / TILE);
+  const tile = currentMap()[ty][tx];
+  if (tile === TILE_STAIRS_UP || tile === TILE_STAIRS_DOWN) {
+    const link = stairLinks.find(s => s.floor === state.currentFloor && s.tx === tx && s.ty === ty);
+    if (link) {
+      state.currentFloor = link.target.floor;
+      player.x = link.target.tx * TILE + TILE/2;
+      // 항상 계단 남쪽(row+1) = 복도 바닥에 떨어진다.
+      // 북쪽(row-1)은 1F에서 사물함 줄이라 끼임 발생.
+      player.y = (link.target.ty + 1) * TILE + TILE/2;
+    }
+  }
+}
+
+function tryInteract() {
+  if (state.phase !== PHASE.EXPLORATION) return;
+  const tx = Math.floor(player.x / TILE), ty = Math.floor(player.y / TILE);
+  const m = currentMap();
+  // 1) 인접 잠긴 문 검사
+  for (let dy = -1; dy <= 1; dy++) {
+    for (let dx = -1; dx <= 1; dx++) {
+      const nx = tx + dx, ny = ty + dy;
+      if (ny < 0 || ny >= MAP_H || nx < 0 || nx >= MAP_W) continue;
+      const t = m[ny][nx];
+      if (t === TILE_LOCKED_DOOR) {
+        showToast(`잠긴 정문 — 열쇠 조각 ${state.keyFragments.length}/${state.totalRequired}`, { warn: true });
+        return;
+      }
+    }
+  }
+  // 2) 트리거 검사
+  for (const t of triggers) {
+    if (t.used) continue;
+    if (t.floor !== state.currentFloor) continue;
+    const d = Math.max(Math.abs(t.tx - tx), Math.abs(t.ty - ty));
+    if (d <= 1) {
+      t.used = true; openPuzzle(t); return;
+    }
+  }
+}
+
+// 학교 내부 진입 감지 → 정문 자동 잠금
+function checkEnterAndEscape() {
+  if (state.phase !== PHASE.EXPLORATION) return;
+  if (!state.exitUnlocked) return;
+  const tx = Math.floor(player.x / TILE);
+  const ty = Math.floor(player.y / TILE);
+  // 스테이지 출구 타일 중 하나에 도달했는가?
+  const onExit = stageExitDoors.some(d => d.tx === tx && d.ty === ty);
+  if (!onExit) return;
+  // renderEnd 가 마지막/중간 스테이지를 알아서 분기 처리.
+  renderEnd();
+}
+
+// ──────────────────────────────────────────
+// 이상 현상
+// ──────────────────────────────────────────
+let lastAnomaly = 0;
+let phantomActive = null; // {x, y, life}
+let lightingDim = 0;      // 0 ~ 1 (currently dimming)
+let lightingDimTimer = 0;
+
+function updateAnomalies(dt) {
+  const d = cfg();
+  // 조명 회복
+  if (lightingDim > 0) {
+    lightingDimTimer -= dt;
+    if (lightingDimTimer <= 0) lightingDim = 0;
+  }
+  // 환영 회복
+  if (phantomActive) {
+    phantomActive.life -= dt;
+    if (phantomActive.life <= 0) phantomActive = null;
+  }
+  // 새 이상 현상
+  if (Math.random() < d.lighting_glitch_rate * dt * 0.3) {
+    lightingDim = 0.3 + Math.random() * 0.4;
+    lightingDimTimer = 0.15 + Math.random() * 0.2;
+  }
+  if (Math.random() < d.phantom_rate * dt * 0.15) {
+    // 플레이어 근처 랜덤 위치 (타일 크기에 비례)
+    phantomActive = {
+      x: player.x + (Math.random() - 0.5) * TILE * 12,
+      y: player.y + (Math.random() - 0.5) * TILE * 12,
+      life: 0.6 + Math.random() * 0.4,
+    };
+  }
+  if (Math.random() < d.anomaly_frequency * dt * 0.05) {
+    const ov = document.getElementById("glitch-overlay");
+    ov.style.background = "rgba(220,80,80,0.08)";
+    setTimeout(() => ov.style.background = "transparent", 200);
+  }
+}
+
+// ──────────────────────────────────────────
+// 렌더링
+// ──────────────────────────────────────────
+function resizeCanvas() {
+  canvas.width = window.innerWidth;
+  canvas.height = window.innerHeight;
+  off.width = Math.ceil(canvas.width / SCALE);
+  off.height = Math.ceil(canvas.height / SCALE);
+}
+window.addEventListener("resize", resizeCanvas);
+
+function render() {
+  const w = off.width, h = off.height;
+  offCtx.fillStyle = "#000";
+  offCtx.fillRect(0, 0, w, h);
+
+  // 카메라 (플레이어 중앙) - 흔들림 없음
+  const camX = player.x - w / 2;
+  const camY = player.y - h / 2;
+
+  const map = currentMap();
+  const startC = Math.max(0, Math.floor(camX / TILE));
+  const endC = Math.min(MAP_W, Math.ceil((camX + w) / TILE) + 1);
+  const startR = Math.max(0, Math.floor(camY / TILE));
+  const endR = Math.min(MAP_H, Math.ceil((camY + h) / TILE) + 1);
+
+  // 스테이지별 색조 필터 - 교실/복도가 스테이지마다 한눈에 다르게 보이게.
+  const isCentral = stageCfg().zone === "central";
+  const isClassroom = stageCfg().zone === "classroom";
+  // 교실은 따뜻한 원목, 복도는 회청색 마룻바닥
+  const woodSet = isClassroom ? classFloorVariants : floorVariants;
+  const woodAt = (r, c) => woodSet[(r * 31 + c * 17) % woodSet.length];
+  // 스테이지 색감은 캔버스 CSS 필터(GPU)로 처리 - 여기서 2D 필터를 쓰면 고해상도에서 심하게 느려짐
+  for (let r = startR; r < endR; r++) {
+    for (let c = startC; c < endC; c++) {
+      const tile = map[r][c];
+      const fdx = Math.floor(c * TILE - camX);
+      const fdy = Math.floor(r * TILE - camY);
+      // 바닥은 위치에 따라 변형 스프라이트 사용 (단조로움 제거)
+      let sp;
+      if (tile === TILE_FLOOR) sp = woodAt(r, c);
+      else if (tile === TILE_MARBLE) sp = marbleVariants[(r + c) % 2];   // 체크무늬
+      else sp = sprites[tile];
+      if (!sp) continue;
+      // 바닥 위 장식물(책상/화분/종이 등)은 바닥을 먼저 깔고 그 위에 그림
+      if (OVERLAY_TILES.has(tile)) {
+        const base = isCentral ? marbleVariants[(r + c) % 2] : woodAt(r, c);
+        offCtx.drawImage(base, fdx, fdy);
+      }
+      offCtx.drawImage(sp, fdx, fdy);
+    }
+  }
+
+  // 트리거 마커 (아직 안 푼 것만 반짝임 - 풀었거나 이미 출구가 열렸으면 표시 안 함)
+  for (const t of triggers) {
+    if (state.exitUnlocked) break;   // 열쇠 다 모음 → 남은 트리거 반짝임 모두 끔
+    if (t.used) continue;
+    if (t.floor !== state.currentFloor) continue;
+    const wx = t.tx * TILE + TILE/2, wy = t.ty * TILE + TILE/2;
+    const dx = Math.floor(wx - camX), dy = Math.floor(wy - camY);
+    // 작은 별/반짝임
+    const blink = (Date.now() / 280) % 2 < 1;      // 깜빡임도 느긋하게
+    if (blink) {
+      offCtx.fillStyle = "#d8c88e";
+      offCtx.fillRect(dx - 1, dy - 27, 4, 4);
+      offCtx.fillStyle = "#e8dcae";
+      offCtx.fillRect(dx - 4, dy - 26, 2, 2);
+      offCtx.fillRect(dx + 4, dy - 26, 2, 2);
+      offCtx.fillRect(dx, dy - 31, 2, 2);
+      offCtx.fillRect(dx, dy - 22, 2, 2);
+    }
+  }
+
+  // 환영
+  if (phantomActive && phantomSprite) {
+    const dx = Math.floor(phantomActive.x - camX) - TILE/2;
+    const dy = Math.floor(phantomActive.y - camY) - TILE/2;
+    offCtx.globalAlpha = Math.min(1, phantomActive.life * 1.5);
+    offCtx.drawImage(phantomSprite, dx, dy);
+    offCtx.globalAlpha = 1;
+  }
+
+  // 플레이어
+  const pSp = playerSprites[player.dir];
+  if (pSp) {
+    const dx = Math.floor(player.x - camX) - TILE/2;
+    const dy = Math.floor(player.y - camY) - TILE/2;
+    offCtx.drawImage(pSp, dx, dy);
+  }
+
+  // 안개 (난이도별) - 그라데이션은 캐시 (매 프레임 생성하면 고해상도에서 느림)
+  const fog = cfg().fog;
+  if (fog > 0) {
+    if (!fogCache || fogCache.w !== w || fogCache.h !== h || fogCache.fog !== fog) {
+      const grd = offCtx.createRadialGradient(w/2, h/2, 20, w/2, h/2, Math.max(w, h)*0.6);
+      grd.addColorStop(0, "rgba(0,0,0,0)");
+      grd.addColorStop(1, `rgba(8,4,16,${fog})`);
+      fogCache = { w, h, fog, grd };
+    }
+    offCtx.fillStyle = fogCache.grd;
+    offCtx.fillRect(0, 0, w, h);
+  }
+
+  // 몽환적 색감 (스테이지 별 톤) + 시간에 따른 미세한 색조 펄스
+  const pulse = 0.85 + 0.15 * Math.sin(Date.now() / 1500);
+  const stageOverlay = stageCfg().overlay;
+  offCtx.globalAlpha = pulse;
+  offCtx.fillStyle = stageOverlay;
+  offCtx.fillRect(0, 0, w, h);
+  offCtx.globalAlpha = 1;
+
+  // 조명 깜빡임 (이상 현상)
+  if (lightingDim > 0) {
+    offCtx.fillStyle = `rgba(0,0,0,${lightingDim})`;
+    offCtx.fillRect(0, 0, w, h);
+  }
+
+  // 먼지 입자
+  offCtx.fillStyle = "rgba(200,180,255,0.45)";
+  for (let i = 0; i < 22; i++) {
+    const x = Math.floor(((Date.now() / 80 + i * 137) % w));
+    const y = Math.floor(((Date.now() / 100 + i * 73) % h));
+    offCtx.fillRect(x, y, 1, 1);
+  }
+  // 떠다니는 몽환 오브 (천천히) - 미리 만든 글로우 스프라이트를 위치만 옮겨 blit (그라데이션 매 프레임 생성 안 함)
+  const now2 = Date.now() / 1000;
+  offCtx.globalCompositeOperation = "lighter";
+  for (let i = 0; i < 6; i++) {
+    const t = now2 + i * 1.7;
+    const ox = (Math.sin(t * 0.3 + i) * 0.45 + 0.5) * w;
+    const oy = (Math.cos(t * 0.25 + i * 1.3) * 0.4 + 0.5) * h;
+    const sc2 = 0.8 + 0.25 * Math.sin(t + i);
+    const sp = orbSprites[i % orbSprites.length];
+    const d = sp.width * sc2;
+    offCtx.drawImage(sp, ox - d/2, oy - d/2, d, d);
+  }
+  offCtx.globalCompositeOperation = "source-over";
+
+  // 화면에 업스케일
+  ctx.imageSmoothingEnabled = false;
+  ctx.fillStyle = "#000";
+  ctx.fillRect(0, 0, canvas.width, canvas.height);
+  ctx.drawImage(off, 0, 0, off.width, off.height, 0, 0, canvas.width, canvas.height);
+}
+
+// ──────────────────────────────────────────
+// HUD + 미니맵
+// ──────────────────────────────────────────
+const bmCanvas = document.getElementById("bm-canvas");
+const bmCtx = bmCanvas.getContext("2d");
+bmCtx.imageSmoothingEnabled = false;
+
+function renderMinimap() {
+  const w = 360 - 12, h = 160 - 30;
+  bmCanvas.width = w; bmCanvas.height = h;
+  const m = currentMap();
+  const sx = w / MAP_W, sy = h / MAP_H;
+  bmCtx.fillStyle = "#0a0a14";
+  bmCtx.fillRect(0, 0, w, h);
+  for (let r = 0; r < MAP_H; r++) {
+    for (let c = 0; c < MAP_W; c++) {
+      const t = m[r][c];
+      let col = null;
+      if (t === TILE_GRASS) col = "#2c3820";
+      else if (t === TILE_SAND) col = "#c8a878";
+      else if (t === TILE_FLOOR || t === TILE_PAPER || t === TILE_PUDDLE) col = "#3a3a42";
+      else if (t === TILE_MARBLE) col = "#444450";
+      else if (t === TILE_RUG) col = "#7a2030";
+      else if (t === TILE_BATH) col = "#6a7080";
+      else if (t === TILE_WALL || t === TILE_WINDOW) col = "#1a1a24";
+      else if (t === TILE_WOODWALL) col = "#5a3e26";
+      else if (t === TILE_LOCKER || t === TILE_LOCKER_GLOW) col = "#4a6a82";
+      else if (t === TILE_DOOR || t === TILE_LOCKED_DOOR || t === TILE_WOODDOOR) col = "#7a5636";
+      else if (t === TILE_ENTRANCE) col = "#c8b878";
+      else if (t === TILE_STAIRS_UP || t === TILE_STAIRS_DOWN) col = "#7af0a0";
+      else if (t === TILE_FENCE) col = "#4a4a55";
+      else if (t === TILE_TRACK) col = "#6b3a2a";
+      else if (t === TILE_DESK) col = "#a07050";
+      else if (t === TILE_CHALK) col = "#1a3a28";
+      else if (t === TILE_MIRROR) col = "#aab4c4";
+      else if (t === TILE_BENCH) col = "#6a4a2a";
+      else if (t === TILE_PLANT) col = "#3a7a40";
+      else if (t === TILE_VENDING || t === TILE_EXTING) col = "#8a2a32";
+      else if (t === TILE_STATUE || t === TILE_PILLAR) col = "#5a5a6a";
+      else if (t === TILE_BOOKSHELF || t === TILE_PODIUM || t === TILE_INFODESK) col = "#5a4430";
+      else if (t === TILE_BOARD || t === TILE_TROPHY || t === TILE_CLOCK) col = "#7a6038";
+      else if (t === TILE_FOUNTAIN) col = "#9aa4ae";
+      else if (t === TILE_VOID) col = "#000";
+      if (col) {
+        bmCtx.fillStyle = col;
+        bmCtx.fillRect(Math.floor(c*sx), Math.floor(r*sy), Math.ceil(sx), Math.ceil(sy));
+      }
+    }
+  }
+  // 트리거 (푼 것/출구 열린 뒤는 회색 - 더 이상 안내 안 함)
+  for (const t of triggers) {
+    if (t.floor !== state.currentFloor) continue;
+    bmCtx.fillStyle = (t.used || state.exitUnlocked) ? "#444" : "#ffaa44";
+    bmCtx.fillRect(Math.floor(t.tx*sx)-1, Math.floor(t.ty*sy)-1, 3, 3);
+  }
+  // 플레이어 (흔들림 없음)
+  const px = (player.x / TILE) * sx;
+  const py = (player.y / TILE) * sy;
+  bmCtx.fillStyle = "#7af0a0";
+  bmCtx.fillRect(Math.floor(px)-1, Math.floor(py)-1, 3, 3);
+}
+
+function updateHud() {
+  const tx = Math.floor(player.x / TILE), ty = Math.floor(player.y / TILE);
+  // 스테이지별 영역 라벨 - 더 이상 운동장은 없음.
+  const sc = stageCfg();
+  let area = sc.name || "학교";
+  if (sc.zone === "corridor") area = "복도";
+  else if (sc.zone === "central") area = "1층 중앙홀";
+  else if (sc.zone === "classroom") area = "교실";
+
+  document.getElementById("hud-title").textContent = `STAGE ${state.stage} — ${stageCfg().name}`;
+  document.getElementById("hud-progress").textContent = `조각 ${state.keyFragments.length}/${state.totalRequired}`;
+  document.getElementById("hud-area").textContent = area;
+  document.getElementById("hud-diff").textContent = `${state.grade} · 여러 과목`;
+  document.getElementById("bm-floor").textContent = state.currentFloor + "F";
+  document.getElementById("bm-progress").textContent = `${state.solved}/${state.totalRequired}`;
+
+  // 인터랙트 힌트
+  const hint = document.getElementById("interact-hint");
+  let near = null;
+  for (const t of triggers) {
+    if (t.used || t.floor !== state.currentFloor) continue;
+    const d = Math.max(Math.abs(t.tx - tx), Math.abs(t.ty - ty));
+    if (d <= 1) { near = t; break; }
+  }
+  if (near) {
+    hint.style.display = "block";
+    const k = gamepadState.connected ? "[E / A]" : "[E]";
+    hint.textContent = `${k} 조사 — ${near.label}`;
+  } else hint.style.display = "none";
+}
+
+// ──────────────────────────────────────────
+// 메인 루프
+// ──────────────────────────────────────────
+let lastTime = 0;
+function loop(now) {
+  requestAnimationFrame(loop);
+  const dt = Math.min(0.05, (now - lastTime) / 1000) || 0;
+  lastTime = now;
+
+  if (state.phase === PHASE.EXPLORATION) {
+    checkEnterAndEscape();
+    let dx = 0, dy = 0;
+    if (keys["w"] || keys["arrowup"]) dy -= 1;
+    if (keys["s"] || keys["arrowdown"]) dy += 1;
+    if (keys["a"] || keys["arrowleft"]) dx -= 1;
+    if (keys["d"] || keys["arrowright"]) dx += 1;
+    const gp = pollGamepad();
+    if (gp.lx !== 0 || gp.ly !== 0) { dx += gp.lx; dy += gp.ly; }
+    // 정규화
+    const len = Math.sqrt(dx*dx + dy*dy);
+    if (len > 0) {
+      dx /= len; dy /= len;
+      tryMove(dx * player.speed * dt, dy * player.speed * dt);
+      // 방향 갱신
+      if (Math.abs(dx) > Math.abs(dy)) player.dir = dx > 0 ? 'right' : 'left';
+      else player.dir = dy > 0 ? 'down' : 'up';
+    }
+    if (gp.interact) tryInteract();
+
+    updateAnomalies(dt);
+    updateHud();
+    renderMinimap();
+  }
+
+  render();
+}
+
+// ──────────────────────────────────────────
+// 퍼즐
+// ──────────────────────────────────────────
+// 토스트 알림
+let toastTimer = null;
+function showToast(msg, opts={}) {
+  const t = document.getElementById("toast");
+  t.textContent = msg;
+  t.classList.toggle("warn", !!opts.warn);
+  t.style.display = "block";
+  if (toastTimer) clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => { t.style.display = "none"; }, opts.duration || 2800);
+}
+
+function updateKeyInventory() {
+  const need = state.totalRequired;
+  const got = state.keyFragments.length;
+  document.getElementById("key-count").textContent = `${got}/${need}`;
+  const frags = document.getElementById("key-frags");
+  frags.innerHTML = "";
+  for (let i = 0; i < need; i++) {
+    const f = document.createElement("div");
+    f.className = "frag" + (i < got ? " got" : "");
+    f.textContent = i < got ? "🗝" : "·";
+    frags.appendChild(f);
+  }
+}
+
+function unlockExit() {
+  if (state.exitUnlocked) return;
+  state.exitUnlocked = true;
+  // 스테이지별 출구 타일만 해제. 장식용 잠긴 문은 계속 잠겨 있음.
+  for (const d of stageExitDoors) {
+    if (map1[d.ty] && map1[d.ty][d.tx] === TILE_LOCKED_DOOR) {
+      map1[d.ty][d.tx] = TILE_ENTRANCE;
+    }
+  }
+  const msgs = {
+    1: "✨ 교실 문이 열렸다! 남쪽 문으로 나가 복도로 향하세요",
+    2: "✨ 동쪽 계단의 잠금이 풀렸다! 계단을 내려가세요",
+    3: "✨ 정문이 열렸다! 남쪽 정문으로 탈출하세요",
+  };
+  showToast(msgs[state.stage] || "✨ 출구가 열렸다!", { duration: 4500 });
+}
+
+let answeredThisPuzzle = false;   // 연타 방지 - 퍼즐 1개당 정답 처리 1회
+
+async function openPuzzle(trigger) {
+  if (!canSpawnQuestion()) return;
+  state.currentTrigger = trigger;
+  state.phase = PHASE.PUZZLE;
+  answeredThisPuzzle = false;      // 새 퍼즐 - 답안 잠금 해제
+  // 문제마다 과목을 새로 무작위 (한 과목만 반복되지 않게 섞기)
+  const subj = SUBJECTS[Math.floor(Math.random() * SUBJECTS.length)];
+  state.subject = subj;
+  showOverlay(true);
+  panel.className = "panel";
+  panel.innerHTML = `<h1>퍼즐 — ${trigger.label}</h1>
+    <div class="question-card"><p class="status" id="status">문제 생성 중...</p></div>`;
+
+  let q;
+  try { q = await requestQuestion(subj); }
+  catch (e) { document.getElementById("status").textContent = "실패: "+e.message; return; }
+  addRecent(q);
+
+  const d = cfg();
+  const showHint = Math.random() < d.hint_frequency;
+  panel.innerHTML = `<h1>퍼즐 — ${trigger.label} <span class="lock-badge">${escapeHtml(subj)}</span></h1>
+    <div class="question-card">
+      <p style="white-space:pre-wrap;font-size:16px">${escapeHtml(q.question)}</p>
+      <div class="choices">
+        ${q.choices.map((c,i)=>`<button data-i="${i}">${escapeHtml(c)}</button>`).join("")}
+      </div>
+      ${showHint ? `<p><button id="hint-btn">힌트 보기</button></p><p class="hint-text" id="hint-text" style="display:none"></p>` : ""}
+      <p class="status" id="status"></p>
+    </div>`;
+  document.querySelectorAll(".choices button").forEach(b => {
+    b.onclick = () => answer(parseInt(b.dataset.i, 10), q);
+  });
+  if (showHint) {
+    document.getElementById("hint-btn").onclick = () => {
+      const ht = document.getElementById("hint-text");
+      ht.style.display = "block"; ht.textContent = q.hint || "(힌트 없음)";
+    };
+  }
+}
+
+function answer(picked, q) {
+  // 연타 방지: 한 퍼즐에서 최초 1회만 처리 (정답 연타로 열쇠 다중 획득 차단)
+  if (answeredThisPuzzle) return;
+  answeredThisPuzzle = true;
+  document.querySelectorAll(".choices button").forEach(b => {
+    b.disabled = true; b.style.opacity = "0.55"; b.style.cursor = "default";
+  });
+  const correct = picked === q.answer_index;
+  const d = cfg();
+  const status = document.getElementById("status");
+  if (correct) {
+    state.solved++;
+    // 열쇠 조각 획득
+    if (state.currentTrigger) {
+      state.keyFragments.push({ label: state.currentTrigger.label });
+    }
+    status.textContent = `정답!  🗝 열쇠 조각 +1  (${state.keyFragments.length}/${state.totalRequired})`;
+    status.style.color = "var(--accent)";
+  } else {
+    // 오답 시 트리거 재사용 가능하게 (단, 같은 트리거에 또 도전)
+    if (state.currentTrigger) state.currentTrigger.used = false;
+    status.textContent = "오답. 다시 도전할 수 있습니다.";
+    status.style.color = "var(--warn)";
+  }
+  if (d.question_difficulty === "easy" || !correct) {
+    status.textContent += "  해설: " + q.explanation;
+  }
+  saveGame();
+  setTimeout(() => {
+    state.phase = PHASE.EXPLORATION;
+    showOverlay(false);
+    updateKeyInventory();
+    // 모든 조각을 모았으면 잠금 해제
+    if (state.keyFragments.length >= state.totalRequired && !state.exitUnlocked) {
+      unlockExit();
+    } else if (correct) {
+      showToast(`🗝 열쇠 조각 +1 (${state.keyFragments.length}/${state.totalRequired})`);
+    }
+  }, 2400);
+}
+
+let escapeShown = false;
+function renderEnd() {
+  if (escapeShown) return;
+  escapeShown = true;
+  state.phase = PHASE.PUZZLE;
+  showOverlay(true);
+  panel.className = "panel";
+  const isFinal = state.stage >= state.maxStage;
+  const sc = stageCfg();
+  if (isFinal) {
+    panel.innerHTML = `<h1>★ 최 종 탈 출 ★</h1>
+      <p style="font-size:18px">${state.userId} 님,<br>
+      ${state.maxStage}개의 스테이지를 모두 빠져나왔다.</p>
+      <p style="color:var(--muted);font-size:14px">"꿈에서 깨어났다. 학교는 더 이상 그곳에 없었다..."</p>
+      <p><button class="primary" onclick="location.reload()">처음으로</button></p>`;
+  } else {
+    const next = STAGES[state.stage + 1];
+    panel.innerHTML = `<h1>STAGE ${state.stage} CLEAR</h1>
+      <p style="font-size:18px">${sc.name} 을(를) 탈출했다.<br>
+      ${state.keyFragments.length}개의 열쇠 조각을 모두 모았다.</p>
+      <p style="color:var(--muted);font-size:14px">"하지만 정문 너머로 또 다른 학교가 보인다..."</p>
+      <h2>NEXT — STAGE ${state.stage + 1}: ${next.name}</h2>
+      <p style="font-size:14px;color:#c8b0e8">${next.subtitle}</p>
+      <p><button class="primary" id="next-stage-btn">다음 스테이지 →</button></p>`;
+    document.getElementById("next-stage-btn").onclick = () => startNextStage();
+  }
+  document.getElementById("key-inv").style.display = "none";
+}
+
+function startNextStage() {
+  state.stage++;
+  escapeShown = false;
+  // 회피 목록은 스테이지가 바뀌어도 유지 - 게임 내내 같은 문제 반복 방지.
+  showOverlay(false);
+  initGame();
+}
+
+function escapeHtml(s) {
+  return String(s).replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"})[c]);
+}
+
+// ──────────────────────────────────────────
+// 시작
+// ──────────────────────────────────────────
+let gameInitialized = false;
+let loopStarted = false;   // 게임 루프는 앱 전체에서 딱 한 번만 시작 (중복 방지)
+function initGame() {
+  resizeCanvas();
+  if (!gameInitialized) {
+    buildSprites();
+    gameInitialized = true;
+  }
+  // 매번 새로 빌드 (재시작 대응)
+  triggers.length = 0;
+  stairLinks.length = 0;
+  buildMaps();
+  // 열쇠 개수는 스테이지마다 무작위 (문제 1개당 열쇠 1개). 최소 3 ~ 최대 트리거 수
+  const avail = triggers.length;
+  state.totalRequired = avail <= 3 ? avail
+    : 3 + Math.floor(Math.random() * (avail - 2));
+  state.keyFragments = [];
+  state.exitUnlocked = false;  // 시작부터 잠긴 상태 (스테이지마다 다른 출구)
+  state.entered = true;         // 이미 학교 안 - 운동장 진입 시퀀스 없음
+  state.solved = 0;
+  state.currentFloor = 1;
+  escapeShown = false;
+  // 스테이지별 스폰 위치
+  const sc = stageCfg();
+  const spawn = sc.spawn || { tx: 25, ty: 16 };
+  player.x = spawn.tx * TILE + TILE/2;
+  player.y = spawn.ty * TILE + TILE/2;
+  player.dir = 'down';
+  // 스테이지 색감 - 캔버스 요소에 CSS 필터로 한 번만 적용 (GPU 가속, 매 프레임 비용 없음)
+  canvas.style.filter = sc.tile_filter ? sc.tile_filter : "none";
+  state.phase = PHASE.EXPLORATION;   // 스테이지 전환 후 반드시 탐험 단계로 복귀 (없으면 못 움직임)
+
+  // 이어하기: 저장된 스테이지 내부 진행(모은 열쇠·위치)을 그대로 복원
+  if (state.pendingResume) {
+    const pr = state.pendingResume;
+    state.pendingResume = null;
+    if (typeof pr.total === "number" && pr.total > 0) {
+      state.totalRequired = triggers.length ? Math.min(pr.total, triggers.length) : pr.total;
+    }
+    // 모았던 열쇠 개수만큼 앞쪽 트리거를 '이미 푼' 상태로 표시하고 조각 복원
+    const fragCount = Math.max(0, Math.min(pr.fragments | 0, state.totalRequired));
+    let marked = 0;
+    for (const t of triggers) {
+      if (marked >= fragCount) break;
+      t.used = true;
+      state.keyFragments.push({ label: t.label });
+      marked++;
+    }
+    state.solved = pr.solved | 0;
+    if (typeof pr.px === "number" && typeof pr.py === "number") { player.x = pr.px; player.y = pr.py; }
+    // 모든 조각을 이미 모았던 상태면 출구를 열어 둔 채로 재개
+    if (state.keyFragments.length >= state.totalRequired) unlockExit();
+  }
+
+  document.getElementById("key-inv").style.display = "block";
+  updateKeyInventory();
+  saveGame();   // 스테이지 시작 시점 저장 - 이어하기가 이 스테이지를 가리키게
+  showToast(`★ STAGE ${state.stage} — ${sc.name} ★\n${sc.subtitle}\n${sc.intro_toast || ""}`, { duration: 6000 });
+  setTimeout(() => {
+    showToast("노란 ✦ 반짝임에 다가가 [E] 를 누르세요", { duration: 4000 });
+  }, 6500);
+  lastTime = performance.now();
+  // 루프는 한 번만 시작 - 스테이지 전환마다 중복 등록되면 입력이 여러 번 처리돼 버벅임/릴레이 발생
+  if (!loopStarted) { loopStarted = true; requestAnimationFrame(loop); }
+}
+
+// 종료 버튼 → 확인창
+document.getElementById("quit-btn").onclick = () => renderQuitConfirm();
+
+// 창/탭을 닫기 직전 자동 저장 + 떠날지 확인 (탐험 중일 때만)
+window.addEventListener("beforeunload", (e) => {
+  if (state.userId && state.phase >= PHASE.EXPLORATION) {
+    saveGame();
+    e.preventDefault();
+    e.returnValue = "";   // 브라우저 기본 "나가시겠습니까?" 확인 표시
+  }
+});
+
+// 첫 화면 = 로그인 (오래된 사진 배경)
+// ===== STAGE 3 바로 입장 (미리보기 사본) =====
+state.userId='미리보기';
+state.grade='중2';
+state.difficulty='EASY';
+state.stage=3;
+state.pendingResume=null;
+enterSchool();
+
+</script>
+</body>
+</html>

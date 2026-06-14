@@ -1,0 +1,7 @@
+# 옛 백업본 (배포 불필요)
+backups/
+
+# OS / 에디터
+.DS_Store
+Thumbs.db
+*.tmp

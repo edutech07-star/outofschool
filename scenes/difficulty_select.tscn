@@ -1,0 +1,33 @@
+[gd_scene load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/flow/difficulty_select.gd" id="1"]
+
+[node name="DifficultySelect" type="Control"]
+anchor_right = 1.0
+anchor_bottom = 1.0
+script = ExtResource("1")
+
+[node name="VBox" type="VBoxContainer" parent="."]
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -250.0
+offset_top = -200.0
+offset_right = 250.0
+offset_bottom = 200.0
+
+[node name="Title" type="Label" parent="VBox"]
+text = "2. 난이도를 선택하세요 (게임 시작 후 변경 불가)"
+
+[node name="EasyButton" type="Button" parent="VBox"]
+text = "EASY - 스토리/탐험 중심"
+
+[node name="NormalButton" type="Button" parent="VBox"]
+text = "NORMAL - 기본 권장"
+
+[node name="HardButton" type="Button" parent="VBox"]
+text = "HARD - 심리적 긴장 강화"
+
+[node name="DetailLabel" type="Label" parent="VBox"]
+autowrap_mode = 2

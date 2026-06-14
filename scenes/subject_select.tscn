@@ -1,0 +1,124 @@
+[gd_scene load_steps=5 format=3]
+
+[ext_resource type="Script" path="res://scripts/flow/subject_select.gd" id="1_subj"]
+
+[sub_resource type="StyleBoxFlat" id="style_btn_normal"]
+bg_color = Color(0.13, 0.1, 0.26, 0.9)
+border_width_left = 1
+border_width_top = 1
+border_width_right = 1
+border_width_bottom = 1
+border_color = Color(0.55, 0.42, 0.9, 0.55)
+corner_radius_top_left = 6
+corner_radius_top_right = 6
+corner_radius_bottom_left = 6
+corner_radius_bottom_right = 6
+content_margin_left = 14
+content_margin_top = 18
+content_margin_right = 14
+content_margin_bottom = 18
+
+[sub_resource type="StyleBoxFlat" id="style_btn_hover"]
+bg_color = Color(0.28, 0.2, 0.5, 0.95)
+border_width_left = 1
+border_width_top = 1
+border_width_right = 1
+border_width_bottom = 1
+border_color = Color(0.8, 0.65, 1, 0.95)
+corner_radius_top_left = 6
+corner_radius_top_right = 6
+corner_radius_bottom_left = 6
+corner_radius_bottom_right = 6
+content_margin_left = 14
+content_margin_top = 18
+content_margin_right = 14
+content_margin_bottom = 18
+
+[sub_resource type="Theme" id="theme_dream"]
+Button/colors/font_color = Color(0.94, 0.9, 1, 1)
+Button/font_sizes/font_size = 26
+Button/styles/hover = SubResource("style_btn_hover")
+Button/styles/normal = SubResource("style_btn_normal")
+Button/styles/pressed = SubResource("style_btn_hover")
+
+[node name="SubjectSelect" type="Control"]
+anchor_right = 1.0
+anchor_bottom = 1.0
+theme = SubResource("theme_dream")
+script = ExtResource("1_subj")
+
+[node name="Background" type="ColorRect" parent="."]
+offset_right = 1280.0
+offset_bottom = 720.0
+color = Color(0.04, 0.025, 0.1, 1)
+mouse_filter = 2
+
+[node name="DreamMotes" type="CPUParticles2D" parent="."]
+position = Vector2(640, 80)
+amount = 80
+lifetime = 12.0
+preprocess = 6.0
+emission_shape = 3
+emission_rect_extents = Vector2(640, 40)
+direction = Vector2(0, 1)
+spread = 25.0
+gravity = Vector2(0, 4)
+initial_velocity_min = 2.0
+initial_velocity_max = 8.0
+scale_amount_min = 1.5
+scale_amount_max = 4.0
+color = Color(0.8, 0.85, 1, 0.4)
+
+[node name="VBox" type="VBoxContainer" parent="."]
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -450.0
+offset_top = -240.0
+offset_right = 450.0
+offset_bottom = 240.0
+theme_override_constants/separation = 18
+
+[node name="GradeBadge" type="Label" parent="VBox"]
+horizontal_alignment = 1
+text = "[학년]"
+modulate = Color(0.78, 0.92, 1, 0.85)
+theme_override_font_sizes/font_size = 22
+
+[node name="Title" type="Label" parent="VBox"]
+horizontal_alignment = 1
+text = "과목을 선택하세요"
+modulate = Color(0.92, 0.95, 1, 0.95)
+theme_override_font_sizes/font_size = 36
+
+[node name="Grid" type="GridContainer" parent="VBox"]
+columns = 5
+theme_override_constants/h_separation = 14
+theme_override_constants/v_separation = 14
+
+[node name="Btn국어" type="Button" parent="VBox/Grid"]
+custom_minimum_size = Vector2(170, 100)
+text = "국어"
+
+[node name="Btn사회" type="Button" parent="VBox/Grid"]
+custom_minimum_size = Vector2(170, 100)
+text = "사회"
+
+[node name="Btn과학" type="Button" parent="VBox/Grid"]
+custom_minimum_size = Vector2(170, 100)
+text = "과학"
+
+[node name="Btn수학" type="Button" parent="VBox/Grid"]
+custom_minimum_size = Vector2(170, 100)
+text = "수학"
+
+[node name="Btn영어" type="Button" parent="VBox/Grid"]
+custom_minimum_size = Vector2(170, 100)
+text = "영어"
+
+[node name="Hint" type="Label" parent="VBox"]
+horizontal_alignment = 1
+text = "선택한 학년의 교과 범위에서만 문제가 출제된다."
+modulate = Color(0.65, 0.75, 0.9, 0.7)
+theme_override_font_sizes/font_size = 16
