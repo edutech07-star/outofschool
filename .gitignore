@@ -1,6 +1,9 @@
 # 옛 백업본 (배포 불필요)
 backups/
 
+# Godot 4 캐시 (재생성됨, 커밋 불필요)
+.godot/
+
 # OS / 에디터
 .DS_Store
 Thumbs.db
