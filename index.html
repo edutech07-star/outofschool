@@ -890,7 +890,8 @@ function renderLogin() {
       <input type="checkbox" id="show-pw" style="width:auto;margin:0"> 비밀번호 표시</label>
     <p class="auth-msg" id="auth-msg"></p>
     <p><button class="primary" id="login-btn">로 그 인</button></p>
-    <p class="auth-switch">처음이신가요? <button class="linkbtn" id="to-signup">회원가입</button></p>`;
+    <p class="auth-switch">처음이신가요? <button class="linkbtn" id="to-signup">회원가입</button>
+       <span style="opacity:.4">·</span> <button class="linkbtn" id="to-findid">아이디 찾기</button></p>`;
   const doLogin = () => {
     const id = document.getElementById("uid").value.trim();
     const pw = document.getElementById("pw").value;
@@ -955,7 +956,101 @@ function renderLogin() {
     renderLogin();
   };
   document.getElementById("to-signup").onclick = renderSignup;
+  document.getElementById("to-findid").onclick = renderFindId;
   document.getElementById("uid").focus();
+}
+
+// 아이디 찾기 화면 - 이 브라우저에 저장된 계정을 학년·성별로 조회
+function renderFindId() {
+  state.phase = PHASE.LOGIN;
+  showOverlay(true, { photo:true });
+  panel.className = "panel login";
+  let pickGrade = "";
+  let pickGender = "";   // "" = 상관없음
+  const grades = GRADES.map(g => `<button class="grade-btn" data-g="${g}">${g}</button>`).join("");
+  panel.innerHTML = `
+    <h1>아 이 디 찾 기</h1>
+    <p style="font-size:14px;color:#c8b48a;letter-spacing:2px">학교의 명부에서 이름을 되찾습니다</p>
+    <p style="font-size:13px;color:#a89ac8;margin:0 0 4px;line-height:1.5">
+      가입할 때 고른 <b>학년</b>(과 주인공)으로 이 브라우저에 저장된 계정을 찾습니다.</p>
+    <label>학년</label>
+    <div class="grade-grid">${grades}</div>
+    <label>주인공 (성별 스킨)</label>
+    <div class="grade-grid">
+      <button class="grade-btn gender-btn sel" data-gender="">상관없음</button>
+      <button class="grade-btn gender-btn" data-gender="남">남자</button>
+      <button class="grade-btn gender-btn" data-gender="여">여자</button>
+    </div>
+    <p class="auth-msg" id="auth-msg"></p>
+    <div id="find-result"></div>
+    <p><button class="primary" id="find-btn">아 이 디 찾 기</button></p>
+    <p class="auth-switch"><button class="linkbtn" id="to-login">로그인</button>
+       <span style="opacity:.4">·</span> <button class="linkbtn" id="to-signup">회원가입</button></p>`;
+
+  // 학년 선택
+  panel.querySelectorAll(".grade-btn:not(.gender-btn)").forEach(b => {
+    b.onclick = () => {
+      pickGrade = b.dataset.g;
+      panel.querySelectorAll(".grade-btn:not(.gender-btn)").forEach(x => x.classList.toggle("sel", x.dataset.g === pickGrade));
+    };
+  });
+  // 성별 선택 (상관없음 포함)
+  panel.querySelectorAll(".gender-btn").forEach(b => {
+    b.onclick = () => {
+      pickGender = b.dataset.gender;
+      panel.querySelectorAll(".gender-btn").forEach(x => x.classList.toggle("sel", x.dataset.gender === pickGender));
+    };
+  });
+
+  // 찾은 아이디를 눌렀을 때 - 로그인 화면으로 넘기고 비밀번호 칸에 커서
+  const useId = (id) => {
+    state.userId = id;
+    renderLogin();
+    const pw = document.getElementById("pw");
+    if (pw) pw.focus();
+  };
+
+  const doFind = () => {
+    const box = document.getElementById("find-result");
+    setAuthMsg("");
+    box.innerHTML = "";
+    if (!pickGrade) { setAuthMsg("학년을 먼저 선택하세요."); return; }
+    const accs = getAccounts();
+    const all = Object.keys(accs);
+    if (!all.length) {
+      box.innerHTML = `<p style="font-size:13px;color:#c8a;line-height:1.5">이 브라우저에는 저장된 계정이 하나도 없습니다.<br>
+        다른 기기·브라우저에서 만든 계정은 여기서 찾을 수 없어요 — <b>회원가입</b>으로 새로 만들어 주세요.</p>`;
+      return;
+    }
+    const ids = all.filter(id => {
+      const a = accs[id] || {};
+      if ((a.grade || "중1") !== pickGrade) return false;
+      if (pickGender && (a.gender || "남") !== pickGender) return false;
+      return true;
+    });
+    if (!ids.length) {
+      box.innerHTML = `<p style="font-size:13px;color:#c8a;line-height:1.5">${pickGrade}${pickGender ? " · " + pickGender : ""} 조건에 맞는 계정이 없습니다.<br>
+        학년을 바꿔 다시 찾아보세요. (저장된 계정 ${all.length}개)</p>`;
+      return;
+    }
+    box.innerHTML = `<div style="font-size:13px;color:#a89ac8;text-align:left;margin:2px 0 6px;
+        max-height:120px;overflow:auto;border:1px solid rgba(155,138,255,.15);padding:6px">
+        찾은 아이디 ${ids.length}개 <span style="opacity:.6">(눌러서 로그인)</span><br>
+        ${ids.map(id => {
+          const a = accs[id] || {};
+          return `<span style="display:inline-block;margin:3px 4px;white-space:nowrap">
+            <button class="linkbtn find-chip" data-id="${escapeHtml(id)}">${escapeHtml(id)}</button>
+            <span style="opacity:.5;font-size:12px">${escapeHtml(a.grade || "")} ${escapeHtml(a.gender || "")}</span></span>`;
+        }).join("")}
+      </div>
+      <p style="font-size:12px;color:var(--muted);margin:0 0 4px;line-height:1.5">
+        비밀번호까지 잊었다면 되찾을 방법이 없습니다 — 새 계정을 만들어 주세요.</p>`;
+    box.querySelectorAll(".find-chip").forEach(b => { b.onclick = () => useId(b.dataset.id); });
+  };
+
+  document.getElementById("find-btn").onclick = doFind;
+  document.getElementById("to-login").onclick = renderLogin;
+  document.getElementById("to-signup").onclick = renderSignup;
 }
 
 // 회원가입 화면 - 새 계정 만들기 (아이디·비밀번호·학년)
@@ -5236,7 +5331,11 @@ function boot() {
   let last = null;
   try { last = localStorage.getItem("lastUser"); } catch(e) {}
   const accs = getAccounts();
-  if (last && accs[last]) {
+  // 주소 끝에 ?login (또는 #login) 을 붙이면 자동 로그인을 건너뛰고 로그인(아이디) 화면부터
+  const forceLogin = /(^|[?&])login(=|&|$)/.test(location.search) || location.hash === "#login";
+  // ?findid (또는 #findid) 로 열면 아이디 찾기 화면을 바로 띄운다
+  if (/(^|[?&])findid(=|&|$)/.test(location.search) || location.hash === "#findid") { renderFindId(); return; }
+  if (last && accs[last] && !forceLogin) {
     // 지난번 로그인한 계정으로 바로 입장 (회원가입/로그인 정보 유지)
     const acc = accs[last];
     state.userId = last;
